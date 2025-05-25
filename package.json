@@ -1,0 +1,12 @@
+{
+  "name": "tnt",
+  "version": "1.0.0",
+  "description": "Team New Tab - A customizable dashboard for Chrome's new tab page",
+  "scripts": {
+    "generate-icons": "node generate_icons.js"
+  },
+  "devDependencies": {
+    "canvas": "^2.11.2"
+  },
+  "license": "MIT"
+} 

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNT - Team New Tab</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h1>TNT</h1>
+            </div>
+            <div class="controls">
+                <select id="spaceSelector" class="space-selector">
+                    <option value="">Select a space</option>
+                </select>
+                <button id="themeToggle" class="control-btn" title="Toggle theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button id="addSpaceBtn" class="control-btn" title="Add space">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button id="settingsBtn" class="control-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Space Banner -->
+        <div id="spaceBanner" class="space-banner">
+            <div class="banner-content">
+                <div class="space-info">
+                    <h2 id="spaceName">Welcome to TNT</h2>
+                    <div class="space-details">
+                        <span id="spaceTime" class="time-range"></span>
+                        <span id="spaceStatus" class="status-badge"></span>
+                    </div>
+                </div>
+                <div class="current-time">
+                    <div id="currentTime" class="time"></div>
+                    <div id="currentDate" class="date"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div id="filterChips" class="filter-chips"></div>
+
+        <!-- Links Grid -->
+        <div id="linksGrid" class="links-grid"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <h3>No spaces configured</h3>
+            <p>Add your first space to get started with your custom dashboard.</p>
+            <button id="addFirstSpace" class="primary-btn">
+                <i class="fas fa-plus"></i>
+                Add Your First Space
+            </button>
+        </div>
+    </main>
+
+    <!-- Add Space Modal -->
+    <div id="addSpaceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Add New Space</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="url">JSON URL</button>
+                    <button class="tab-btn" data-tab="raw">Raw JSON</button>
+                </div>
+                <div class="tab-content">
+                    <div id="urlTab" class="tab-panel active">
+                        <label for="configUrl">Configuration URL:</label>
+                        <input type="url" id="configUrl" placeholder="https://example.com/config.json">
+                        <p class="help-text">Enter a URL pointing to a valid JSON configuration file.</p>
+                    </div>
+                    <div id="rawTab" class="tab-panel">
+                        <label for="rawJson">JSON Configuration:</label>
+                        <textarea id="rawJson" rows="12" placeholder='{\n  "name": "My Space",\n  "version": "v1",\n  "mode": "auto",\n  "activeTime": {\n    "start": "09:00",\n    "end": "18:00"\n  },\n  "filters": ["Tag1", "Tag2"],\n  "links": [\n    {\n      "label": "Example Link",\n      "url": "https://example.com",\n      "tag": "Tag1"\n    }\n  ]\n}'></textarea>
+                        <p class="help-text">Paste your JSON configuration directly.</p>
+                    </div>
+                </div>
+                <div id="modalError" class="error-message" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="secondary-btn">Cancel</button>
+                <button id="addSpaceConfirm" class="primary-btn">
+                    <i class="fas fa-plus"></i>
+                    Add Space
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="settings-panel">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button id="closeSettings" class="close-btn">&times;</button>
+            </div>
+            <div class="settings-body">
+                <!-- Theme Settings -->
+                <div class="setting-group">
+                    <label>Theme</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="theme" value="light">
+                            <span>Light</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="theme" value="dark">
+                            <span>Dark</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="theme" value="auto">
+                            <span>Auto (System)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Spaces Management -->
+                <div class="setting-group">
+                    <label>Manage Spaces</label>
+                    <div id="spacesList" class="spaces-list"></div>
+                </div>
+
+                <!-- About -->
+                <div class="setting-group">
+                    <label>About</label>
+                    <div class="about-info">
+                        <p><strong>TNT</strong> v1.0.0</p>
+                        <p>Team New Tab Extension</p>
+                        <p class="help-text">This extension replaces your new tab page with customizable spaces of internal links.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="newtab.js"></script>
+</body>
+</html>

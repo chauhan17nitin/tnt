@@ -1,665 +1,653 @@
 // TNT - Team New Tab Extension JavaScript
 
-class TNTExtension {
-    constructor() {
-        this.spaces = [];
-        this.selectedSpaceId = null;
-        this.currentFilter = 'all';
-        this.theme = 'auto';
+// Global state
+let currentSpace = null;
+let allSpaces = {};
+let activeFilters = [];
+let currentTheme = 'auto';
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeApp();
+    setupEventListeners();
+    updateTime();
+    setInterval(updateTime, 1000);
+});
+
+async function initializeApp() {
+    try {
+        // Load spaces from storage
+        await loadSpaces();
         
-        this.init();
-    }
-
-    async init() {
-        await this.loadSettings();
-        this.setupEventListeners();
-        this.updateClock();
-        this.renderSpaces();
-        this.renderCurrentSpace();
-        this.applyTheme();
-        this.checkTimeBasedActivation();
+        // Load current space
+        await loadCurrentSpace();
         
-        // Update clock every second
-        setInterval(() => this.updateClock(), 1000);
+        // Apply theme
+        applyTheme(currentTheme);
         
-        // Check time-based activation every minute
-        setInterval(() => this.checkTimeBasedActivation(), 60000);
-    }
-
-    async loadSettings() {
-        try {
-            const result = await chrome.storage.local.get(['tntSettings']);
-            const settings = result.tntSettings || this.getDefaultSettings();
-            
-            this.spaces = settings.spaces || [];
-            this.selectedSpaceId = settings.selectedSpaceId;
-            this.theme = settings.theme || 'auto';
-        } catch (error) {
-            console.error('Failed to load settings:', error);
-            const defaultSettings = this.getDefaultSettings();
-            this.spaces = defaultSettings.spaces;
-            this.selectedSpaceId = defaultSettings.selectedSpaceId;
-            this.theme = defaultSettings.theme;
-        }
-    }
-
-    async saveSettings() {
-        const settings = {
-            spaces: this.spaces,
-            selectedSpaceId: this.selectedSpaceId,
-            theme: this.theme
-        };
+        // Update UI
+        updateSpaceSelector();
+        updateSpaceBanner();
+        renderFilterChips();
+        renderLinks();
         
-        try {
-            await chrome.storage.local.set({ tntSettings: settings });
-        } catch (error) {
-            console.error('Failed to save settings:', error);
-        }
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        showEmptyState();
     }
+}
 
-    getDefaultSettings() {
-        const defaultSpace = {
-            id: 'default',
-            config: {
-                name: 'Engineering',
-                version: 'v1',
-                mode: 'auto',
-                activeTime: {
-                    start: '09:00',
-                    end: '18:00'
-                },
-                filters: ['Backend', 'Frontend', 'DevOps', 'Tools'],
-                links: [
-                    {
-                        label: 'GitHub Repository',
-                        url: 'https://github.com',
-                        tag: 'Backend'
-                    },
-                    {
-                        label: 'Grafana Dashboard',
-                        url: 'https://grafana.com',
-                        tag: 'DevOps'
-                    },
-                    {
-                        label: 'Design System',
-                        url: 'https://figma.com',
-                        tag: 'Frontend'
-                    },
-                    {
-                        label: 'Project Board',
-                        url: 'https://linear.app',
-                        tag: 'Tools'
-                    },
-                    {
-                        label: 'Database Admin',
-                        url: 'https://adminer.org',
-                        tag: 'Backend'
-                    },
-                    {
-                        label: 'Cloud Console',
-                        url: 'https://console.cloud.google.com',
-                        tag: 'DevOps'
-                    }
-                ]
-            },
-            source: 'raw',
-            sourceData: ''
-        };
-
-        return {
-            spaces: [defaultSpace],
-            selectedSpaceId: 'default',
-            theme: 'auto'
-        };
-    }
-
-    setupEventListeners() {
-        // Theme toggle
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            this.toggleTheme();
+// Storage functions
+async function loadSpaces() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['spaces'], (result) => {
+            allSpaces = result.spaces || {};
+            resolve();
         });
+    });
+}
 
-        // Add space button
-        document.getElementById('addSpaceBtn').addEventListener('click', () => {
-            this.openAddSpaceModal();
+async function saveSpaces() {
+    return new Promise((resolve) => {
+        chrome.storage.local.set({ spaces: allSpaces }, resolve);
+    });
+}
+
+async function loadCurrentSpace() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['currentSpace'], (result) => {
+            const spaceId = result.currentSpace;
+            if (spaceId && allSpaces[spaceId]) {
+                currentSpace = allSpaces[spaceId];
+                currentSpace.id = spaceId;
+            } else {
+                currentSpace = null;
+            }
+            resolve();
         });
+    });
+}
 
-        // Settings button
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            this.openSettings();
-        });
+async function saveCurrentSpace(spaceId) {
+    return new Promise((resolve) => {
+        chrome.storage.local.set({ currentSpace: spaceId }, resolve);
+    });
+}
 
-        // Space selector
-        document.getElementById('spaceSelector').addEventListener('change', (e) => {
-            this.selectSpace(e.target.value);
-        });
-
-        // Modal events
-        this.setupModalEvents();
-        
-        // Settings events
-        this.setupSettingsEvents();
-    }
-
-    setupModalEvents() {
-        const modal = document.getElementById('addSpaceModal');
-        const closeBtn = document.getElementById('closeModal');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const addBtn = document.getElementById('addSpaceConfirm');
-
-        // Close modal
-        [closeBtn, cancelBtn].forEach(btn => {
-            btn.addEventListener('click', () => this.closeAddSpaceModal());
-        });
-
-        // Click outside to close
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) this.closeAddSpaceModal();
-        });
-
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const tabName = e.target.dataset.tab;
-                this.switchTab(tabName);
-            });
-        });
-
-        // Add space confirm
-        addBtn.addEventListener('click', () => this.addSpace());
-
-        // Add first space button
-        document.getElementById('addFirstSpace').addEventListener('click', () => {
-            this.openAddSpaceModal();
+// Time and greeting functions
+function updateTime() {
+    const now = new Date();
+    const timeElement = document.getElementById('currentTime');
+    const dateElement = document.getElementById('currentDate');
+    
+    if (timeElement) {
+        timeElement.textContent = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
     }
-
-    setupSettingsEvents() {
-        const settingsPanel = document.getElementById('settingsPanel');
-        const closeBtn = document.getElementById('closeSettings');
-
-        closeBtn.addEventListener('click', () => this.closeSettings());
-
-        // Theme radio buttons
-        document.querySelectorAll('input[name="theme"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.setTheme(e.target.value);
-                }
-            });
-        });
-    }
-
-    updateClock() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const dateStr = now.toLocaleDateString('en-US', {
+    
+    if (dateElement) {
+        dateElement.textContent = now.toLocaleDateString('en-US', {
             weekday: 'long',
-            month: 'short',
+            month: 'long',
             day: 'numeric'
         });
-
-        document.getElementById('currentTime').textContent = timeStr;
-        document.getElementById('currentDate').textContent = dateStr;
     }
+}
 
-    toggleTheme() {
-        const themes = ['light', 'dark', 'auto'];
-        const currentIndex = themes.indexOf(this.theme);
-        const nextTheme = themes[(currentIndex + 1) % themes.length];
-        this.setTheme(nextTheme);
-    }
+function isSpaceActive(space) {
+    if (!space.activeTime) return true;
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const [startHour, startMinute] = space.activeTime.start.split(':').map(Number);
+    const [endHour, endMinute] = space.activeTime.end.split(':').map(Number);
+    
+    const startTime = startHour * 60 + startMinute;
+    const endTime = endHour * 60 + endMinute;
+    
+    return currentTime >= startTime && currentTime <= endTime;
+}
 
-    setTheme(theme) {
-        this.theme = theme;
-        this.applyTheme();
-        this.saveSettings();
-        
-        // Update theme radio button
-        const radio = document.querySelector(`input[name="theme"][value="${theme}"]`);
-        if (radio) radio.checked = true;
-    }
-
-    applyTheme() {
-        const body = document.body;
-        const themeIcon = document.querySelector('#themeToggle i');
-        
-        body.removeAttribute('data-theme');
-        
-        if (this.theme === 'dark') {
-            body.setAttribute('data-theme', 'dark');
-            themeIcon.className = 'fas fa-moon';
-        } else if (this.theme === 'light') {
-            themeIcon.className = 'fas fa-sun';
-        } else {
-            // Auto mode - check system preference
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (prefersDark) {
-                body.setAttribute('data-theme', 'dark');
-            }
-            themeIcon.className = 'fas fa-magic';
+// UI update functions
+function updateSpaceSelector() {
+    const selector = document.getElementById('spaceSelector');
+    if (!selector) return;
+    
+    selector.innerHTML = '<option value="">Select a space</option>';
+    
+    Object.entries(allSpaces).forEach(([id, space]) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = space.name;
+        if (currentSpace && currentSpace.id === id) {
+            option.selected = true;
         }
-    }
+        selector.appendChild(option);
+    });
+}
 
-    checkTimeBasedActivation() {
-        if (!this.spaces.length) return;
-
-        // Find space with matching active time
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-
-        for (const space of this.spaces) {
-            if (space.config.activeTime) {
-                const { start, end } = space.config.activeTime;
-                const [startHour, startMin] = start.split(':').map(Number);
-                const [endHour, endMin] = end.split(':').map(Number);
-                
-                const startTime = startHour * 60 + startMin;
-                const endTime = endHour * 60 + endMin;
-                
-                let isInRange;
-                if (startTime > endTime) {
-                    // Overnight range
-                    isInRange = currentTime >= startTime || currentTime <= endTime;
-                } else {
-                    isInRange = currentTime >= startTime && currentTime <= endTime;
-                }
-
-                if (isInRange && this.selectedSpaceId !== space.id) {
-                    this.selectSpace(space.id, false); // Don't save manual selection
-                    break;
-                }
-            }
+function updateSpaceBanner() {
+    const spaceName = document.getElementById('spaceName');
+    const spaceTime = document.getElementById('spaceTime');
+    const spaceStatus = document.getElementById('spaceStatus');
+    
+    if (currentSpace) {
+        if (spaceName) spaceName.textContent = currentSpace.name;
+        
+        if (spaceTime && currentSpace.activeTime) {
+            spaceTime.textContent = `${currentSpace.activeTime.start} - ${currentSpace.activeTime.end}`;
+        } else if (spaceTime) {
+            spaceTime.textContent = 'Always active';
         }
-    }
-
-    renderSpaces() {
-        const selector = document.getElementById('spaceSelector');
-        selector.innerHTML = '<option value="">Select a space</option>';
-
-        this.spaces.forEach(space => {
-            const option = document.createElement('option');
-            option.value = space.id;
-            option.textContent = space.config.name;
-            if (space.config.activeTime) {
-                option.textContent += ` (${space.config.activeTime.start}-${space.config.activeTime.end})`;
-            }
-            selector.appendChild(option);
-        });
-
-        if (this.selectedSpaceId) {
-            selector.value = this.selectedSpaceId;
+        
+        if (spaceStatus) {
+            const isActive = isSpaceActive(currentSpace);
+            spaceStatus.textContent = isActive ? 'Active' : 'Inactive';
+            spaceStatus.className = `status-badge ${isActive ? 'active' : 'inactive'}`;
         }
-
-        // Update settings spaces list
-        this.renderSettingsSpaces();
+    } else {
+        if (spaceName) spaceName.textContent = 'Welcome to TNT';
+        if (spaceTime) spaceTime.textContent = '';
+        if (spaceStatus) spaceStatus.textContent = '';
     }
+}
 
-    renderSettingsSpaces() {
-        const spacesList = document.getElementById('spacesList');
-        spacesList.innerHTML = '';
-
-        this.spaces.forEach(space => {
-            const spaceItem = document.createElement('div');
-            spaceItem.className = 'space-item';
-            
-            spaceItem.innerHTML = `
-                <div class="space-info">
-                    <div class="space-name">${space.config.name}</div>
-                    <div class="space-meta">${space.source === 'url' ? 'From URL' : 'Raw JSON'} • ${space.config.links.length} links</div>
-                </div>
-                <button class="delete-btn" data-space-id="${space.id}" ${this.spaces.length <= 1 ? 'disabled' : ''}>
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-
-            const deleteBtn = spaceItem.querySelector('.delete-btn');
-            deleteBtn.addEventListener('click', () => this.deleteSpace(space.id));
-
-            spacesList.appendChild(spaceItem);
+function renderFilterChips() {
+    const container = document.getElementById('filterChips');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!currentSpace || !currentSpace.filters) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    
+    // Count links per filter
+    const filterCounts = {};
+    if (currentSpace.links) {
+        currentSpace.links.forEach(link => {
+            filterCounts[link.tag] = (filterCounts[link.tag] || 0) + 1;
         });
     }
-
-    renderCurrentSpace() {
-        const currentSpace = this.spaces.find(s => s.id === this.selectedSpaceId);
+    
+    currentSpace.filters.forEach(filter => {
+        const chip = document.createElement('div');
+        chip.className = 'filter-chip';
+        chip.dataset.filter = filter;
         
-        if (!currentSpace) {
-            this.showEmptyState();
-            return;
+        if (activeFilters.includes(filter)) {
+            chip.classList.add('active');
         }
-
-        this.hideEmptyState();
-        this.updateSpaceBanner(currentSpace);
-        this.renderFilterChips(currentSpace);
-        this.renderLinksGrid(currentSpace);
-    }
-
-    showEmptyState() {
-        document.getElementById('emptyState').style.display = 'block';
-        document.getElementById('spaceBanner').style.display = 'none';
-        document.getElementById('filterChips').style.display = 'none';
-        document.getElementById('linksGrid').style.display = 'none';
-    }
-
-    hideEmptyState() {
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('spaceBanner').style.display = 'block';
-        document.getElementById('filterChips').style.display = 'block';
-        document.getElementById('linksGrid').style.display = 'block';
-    }
-
-    updateSpaceBanner(space) {
-        document.getElementById('spaceName').textContent = space.config.name;
         
-        const timeRange = document.getElementById('spaceTime');
-        const status = document.getElementById('spaceStatus');
-        
-        if (space.config.activeTime) {
-            timeRange.textContent = `Active: ${space.config.activeTime.start} - ${space.config.activeTime.end}`;
-            
-            const isActive = this.isSpaceActive(space);
-            status.textContent = isActive ? 'Currently Active' : 'Inactive';
-            status.className = `status-badge ${isActive ? 'active' : 'inactive'}`;
-        } else {
-            timeRange.textContent = 'Always active';
-            status.textContent = 'Always Active';
-            status.className = 'status-badge active';
-        }
-    }
-
-    isSpaceActive(space) {
-        if (!space.config.activeTime) return true;
-
-        const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        const { start, end } = space.config.activeTime;
-        const [startHour, startMin] = start.split(':').map(Number);
-        const [endHour, endMin] = end.split(':').map(Number);
-        
-        const startTime = startHour * 60 + startMin;
-        const endTime = endHour * 60 + endMin;
-        
-        if (startTime > endTime) {
-            return currentTime >= startTime || currentTime <= endTime;
-        }
-        return currentTime >= startTime && currentTime <= endTime;
-    }
-
-    renderFilterChips(space) {
-        const container = document.getElementById('filterChips');
-        container.innerHTML = '';
-
-        if (!space.config.filters || space.config.filters.length === 0) {
-            container.style.display = 'none';
-            return;
-        }
-
-        container.style.display = 'flex';
-
-        // Count links per filter
-        const linkCounts = {};
-        space.config.links.forEach(link => {
-            linkCounts[link.tag] = (linkCounts[link.tag] || 0) + 1;
-        });
-
-        // All links chip
-        const allChip = this.createFilterChip('All Links', 'all', space.config.links.length);
-        container.appendChild(allChip);
-
-        // Individual filter chips
-        space.config.filters.forEach(filter => {
-            const count = linkCounts[filter] || 0;
-            const chip = this.createFilterChip(filter, filter.toLowerCase(), count);
-            container.appendChild(chip);
-        });
-    }
-
-    createFilterChip(label, value, count) {
-        const chip = document.createElement('button');
-        chip.className = `filter-chip ${this.currentFilter === value ? 'active' : ''}`;
         chip.innerHTML = `
-            ${label}
-            <span class="chip-count">(${count})</span>
+            ${filter}
+            <span class="chip-count">${filterCounts[filter] || 0}</span>
         `;
-        chip.addEventListener('click', () => {
-            this.currentFilter = value;
-            this.renderCurrentSpace();
-        });
-        return chip;
+        
+        chip.addEventListener('click', () => toggleFilter(filter));
+        container.appendChild(chip);
+    });
+}
+
+function renderLinks() {
+    const container = document.getElementById('linksGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (!container) return;
+    
+    if (!currentSpace || !currentSpace.links || currentSpace.links.length === 0) {
+        showEmptyState();
+        return;
     }
-
-    renderLinksGrid(space) {
-        const container = document.getElementById('linksGrid');
-        container.innerHTML = '';
-
-        let filteredLinks = space.config.links;
-        if (this.currentFilter !== 'all') {
-            filteredLinks = space.config.links.filter(link => 
-                link.tag.toLowerCase() === this.currentFilter
-            );
-        }
-
-        filteredLinks.forEach(link => {
-            const linkCard = this.createLinkCard(link);
-            container.appendChild(linkCard);
-        });
-
-        // Add fade-in animation
-        container.classList.add('fade-in');
+    
+    // Filter links
+    let filteredLinks = currentSpace.links;
+    if (activeFilters.length > 0) {
+        filteredLinks = currentSpace.links.filter(link => 
+            activeFilters.includes(link.tag)
+        );
     }
-
-    createLinkCard(link) {
+    
+    if (filteredLinks.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    // Hide empty state and show links
+    if (emptyState) emptyState.style.display = 'none';
+    container.style.display = 'grid';
+    container.innerHTML = '';
+    
+    filteredLinks.forEach(link => {
         const card = document.createElement('a');
         card.className = 'link-card';
         card.href = link.url;
         card.target = '_blank';
-        card.rel = 'noopener noreferrer';
-
-        const gradientClass = this.getLinkGradientClass(link.tag);
-        const iconClass = this.getLinkIconClass(link.tag);
-
+        
+        // Add gradient class based on tag
+        const gradientClass = getGradientClass(link.tag);
+        
         card.innerHTML = `
             <div class="link-content">
                 <div class="link-icon ${gradientClass}">
-                    <i class="${iconClass}"></i>
+                    <i class="${getIconClass(link.tag)}"></i>
                 </div>
                 <div class="link-info">
                     <div class="link-title">${link.label}</div>
-                    <div class="link-url">${link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</div>
-                    <span class="link-tag">${link.tag}</span>
+                    <div class="link-url">${link.url}</div>
+                    <div class="link-tag">${link.tag}</div>
                 </div>
             </div>
         `;
-
-        return card;
-    }
-
-    getLinkGradientClass(tag) {
-        const gradientMap = {
-            backend: 'gradient-backend',
-            frontend: 'gradient-frontend',
-            devops: 'gradient-devops',
-            tools: 'gradient-tools',
-            design: 'gradient-design',
-            monitoring: 'gradient-monitoring',
-            communication: 'gradient-communication',
-            documentation: 'gradient-documentation'
-        };
-        return gradientMap[tag.toLowerCase()] || 'gradient-default';
-    }
-
-    getLinkIconClass(tag) {
-        const iconMap = {
-            backend: 'fas fa-database',
-            frontend: 'fas fa-code',
-            devops: 'fas fa-cogs',
-            tools: 'fas fa-wrench',
-            design: 'fas fa-pen-nib',
-            monitoring: 'fas fa-chart-line',
-            communication: 'fas fa-comments',
-            documentation: 'fas fa-file-alt'
-        };
-        return iconMap[tag.toLowerCase()] || 'fas fa-link';
-    }
-
-    selectSpace(spaceId, saveSelection = true) {
-        this.selectedSpaceId = spaceId;
-        this.currentFilter = 'all';
         
-        if (saveSelection) {
-            this.saveSettings();
-        }
-        
-        this.renderSpaces();
-        this.renderCurrentSpace();
+        container.appendChild(card);
+    });
+}
+
+function showEmptyState() {
+    const container = document.getElementById('linksGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (container) container.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
+}
+
+function getGradientClass(tag) {
+    const tagMap = {
+        'Backend': 'gradient-backend',
+        'Frontend': 'gradient-frontend',
+        'DevOps': 'gradient-devops',
+        'Tools': 'gradient-tools',
+        'Design': 'gradient-design',
+        'Monitoring': 'gradient-monitoring',
+        'Communication': 'gradient-communication',
+        'Documentation': 'gradient-documentation'
+    };
+    return tagMap[tag] || 'gradient-default';
+}
+
+function getIconClass(tag) {
+    const iconMap = {
+        'Backend': 'fas fa-server',
+        'Frontend': 'fas fa-code',
+        'DevOps': 'fas fa-cogs',
+        'Tools': 'fas fa-tools',
+        'Design': 'fas fa-palette',
+        'Monitoring': 'fas fa-chart-line',
+        'Communication': 'fas fa-comments',
+        'Documentation': 'fas fa-book'
+    };
+    return iconMap[tag] || 'fas fa-link';
+}
+
+// Filter functions
+function toggleFilter(filter) {
+    if (activeFilters.includes(filter)) {
+        activeFilters = activeFilters.filter(f => f !== filter);
+    } else {
+        activeFilters.push(filter);
     }
+    
+    renderFilterChips();
+    renderLinks();
+}
 
-    openAddSpaceModal() {
-        document.getElementById('addSpaceModal').classList.add('active');
-        this.clearModalForm();
+function clearAllFilters() {
+    activeFilters = [];
+    renderFilterChips();
+    renderLinks();
+}
+
+// Theme functions
+function applyTheme(theme) {
+    currentTheme = theme;
+    
+    if (theme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.dataset.theme = prefersDark ? 'dark' : 'light';
+    } else {
+        document.body.dataset.theme = theme;
     }
-
-    closeAddSpaceModal() {
-        document.getElementById('addSpaceModal').classList.remove('active');
-        this.clearModalForm();
-    }
-
-    clearModalForm() {
-        document.getElementById('configUrl').value = '';
-        document.getElementById('rawJson').value = '';
-        document.getElementById('modalError').style.display = 'none';
-        this.switchTab('url');
-    }
-
-    switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
-
-        // Update tab panels
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.toggle('active', panel.id === `${tabName}Tab`);
-        });
-    }
-
-    async addSpace() {
-        const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-        const errorDiv = document.getElementById('modalError');
-        
-        try {
-            let config;
-            let source;
-            let sourceData;
-
-            if (activeTab === 'url') {
-                const url = document.getElementById('configUrl').value.trim();
-                if (!url) {
-                    throw new Error('Please enter a URL');
-                }
-
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch: ${response.statusText}`);
-                }
-
-                config = await response.json();
-                source = 'url';
-                sourceData = url;
-            } else {
-                const jsonText = document.getElementById('rawJson').value.trim();
-                if (!jsonText) {
-                    throw new Error('Please enter JSON configuration');
-                }
-
-                config = JSON.parse(jsonText);
-                source = 'raw';
-                sourceData = jsonText;
-            }
-
-            // Validate config
-            this.validateSpaceConfig(config);
-
-            // Add space
-            const newSpace = {
-                id: this.generateId(),
-                config,
-                source,
-                sourceData
-            };
-
-            this.spaces.push(newSpace);
-            this.selectedSpaceId = newSpace.id;
-            await this.saveSettings();
-
-            this.renderSpaces();
-            this.renderCurrentSpace();
-            this.closeAddSpaceModal();
-
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.style.display = 'block';
+    
+    // Update theme toggle icon
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        const icon = themeToggle.querySelector('i');
+        if (icon) {
+            const isDark = document.body.dataset.theme === 'dark';
+            icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
         }
     }
+    
+    // Save theme preference
+    chrome.storage.local.set({ theme: currentTheme });
+}
 
-    validateSpaceConfig(config) {
-        if (!config.name || typeof config.name !== 'string') {
-            throw new Error('Space name is required');
-        }
-        if (!config.version || config.version !== 'v1') {
-            throw new Error('Version must be "v1"');
-        }
-        if (!Array.isArray(config.links)) {
-            throw new Error('Links must be an array');
-        }
-        
-        config.links.forEach((link, index) => {
-            if (!link.label || !link.url || !link.tag) {
-                throw new Error(`Link ${index + 1} is missing required fields`);
-            }
-            try {
-                new URL(link.url);
-            } catch {
-                throw new Error(`Link ${index + 1} has invalid URL`);
-            }
-        });
-    }
+function toggleTheme() {
+    const themes = ['light', 'dark', 'auto'];
+    const currentIndex = themes.indexOf(currentTheme);
+    const nextTheme = themes[(currentIndex + 1) % themes.length];
+    applyTheme(nextTheme);
+}
 
-    generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-
-    deleteSpace(spaceId) {
-        if (this.spaces.length <= 1) {
-            alert('You must have at least one space.');
-            return;
-        }
-
-        this.spaces = this.spaces.filter(s => s.id !== spaceId);
-        
-        if (this.selectedSpaceId === spaceId) {
-            this.selectedSpaceId = this.spaces[0]?.id || null;
-        }
-
-        this.saveSettings();
-        this.renderSpaces();
-        this.renderCurrentSpace();
-    }
-
-    openSettings() {
-        document.getElementById('settingsPanel').classList.add('active');
-        
-        // Set current theme radio
-        const themeRadio = document.querySelector(`input[name="theme"][value="${this.theme}"]`);
-        if (themeRadio) themeRadio.checked = true;
-    }
-
-    closeSettings() {
-        document.getElementById('settingsPanel').classList.remove('active');
+// Modal functions
+function showModal() {
+    const modal = document.getElementById('addSpaceModal');
+    if (modal) {
+        modal.classList.add('active');
+        // Clear form
+        const urlInput = document.getElementById('configUrl');
+        const jsonInput = document.getElementById('rawJson');
+        if (urlInput) urlInput.value = '';
+        if (jsonInput) jsonInput.value = '';
+        hideError();
     }
 }
 
-// Initialize the extension when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new TNTExtension();
+function hideModal() {
+    const modal = document.getElementById('addSpaceModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function showError(message) {
+    const errorElement = document.getElementById('modalError');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function hideError() {
+    const errorElement = document.getElementById('modalError');
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+}
+
+// Space management functions
+async function addSpaceFromUrl(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const spaceConfig = await response.json();
+        return addSpace(spaceConfig);
+    } catch (error) {
+        throw new Error(`Failed to load from URL: ${error.message}`);
+    }
+}
+
+async function addSpaceFromJson(jsonString) {
+    try {
+        const spaceConfig = JSON.parse(jsonString);
+        return addSpace(spaceConfig);
+    } catch (error) {
+        throw new Error(`Invalid JSON: ${error.message}`);
+    }
+}
+
+async function addSpace(spaceConfig) {
+    // Validate space config
+    if (!spaceConfig.name) {
+        throw new Error('Space must have a name');
+    }
+    
+    // Generate unique ID
+    const spaceId = generateSpaceId(spaceConfig.name);
+    
+    // Add to spaces
+    allSpaces[spaceId] = spaceConfig;
+    await saveSpaces();
+    
+    // Set as current space
+    currentSpace = spaceConfig;
+    currentSpace.id = spaceId;
+    await saveCurrentSpace(spaceId);
+    
+    // Update UI
+    updateSpaceSelector();
+    updateSpaceBanner();
+    renderFilterChips();
+    renderLinks();
+    
+    return spaceId;
+}
+
+function generateSpaceId(name) {
+    const base = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const timestamp = Date.now();
+    return `${base}-${timestamp}`;
+}
+
+async function deleteSpace(spaceId) {
+    if (confirm('Are you sure you want to delete this space?')) {
+        delete allSpaces[spaceId];
+        await saveSpaces();
+        
+        // If this was the current space, clear it
+        if (currentSpace && currentSpace.id === spaceId) {
+            currentSpace = null;
+            await saveCurrentSpace(null);
+        }
+        
+        updateSpaceSelector();
+        updateSpaceBanner();
+        renderFilterChips();
+        renderLinks();
+        updateSettingsSpacesList();
+    }
+}
+
+// Settings functions
+function showSettings() {
+    const panel = document.getElementById('settingsPanel');
+    if (panel) {
+        panel.classList.add('active');
+        updateSettingsSpacesList();
+        updateThemeSettings();
+    }
+}
+
+function hideSettings() {
+    const panel = document.getElementById('settingsPanel');
+    if (panel) {
+        panel.classList.remove('active');
+    }
+}
+
+function updateSettingsSpacesList() {
+    const container = document.getElementById('spacesList');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.entries(allSpaces).forEach(([id, space]) => {
+        const item = document.createElement('div');
+        item.className = 'space-item';
+        
+        item.innerHTML = `
+            <div class="space-info">
+                <div class="space-name">${space.name}</div>
+                <div class="space-meta">${space.links ? space.links.length : 0} links</div>
+            </div>
+            <button class="delete-btn" onclick="deleteSpace('${id}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        
+        container.appendChild(item);
+    });
+}
+
+function updateThemeSettings() {
+    const radios = document.querySelectorAll('input[name="theme"]');
+    radios.forEach(radio => {
+        radio.checked = radio.value === currentTheme;
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                applyTheme(radio.value);
+            }
+        });
+    });
+}
+
+// Event listeners
+function setupEventListeners() {
+    // Space selector
+    const spaceSelector = document.getElementById('spaceSelector');
+    if (spaceSelector) {
+        spaceSelector.addEventListener('change', async (e) => {
+            const spaceId = e.target.value;
+            if (spaceId && allSpaces[spaceId]) {
+                currentSpace = allSpaces[spaceId];
+                currentSpace.id = spaceId;
+                await saveCurrentSpace(spaceId);
+                
+                // Clear filters and update UI
+                activeFilters = [];
+                updateSpaceBanner();
+                renderFilterChips();
+                renderLinks();
+            }
+        });
+    }
+    
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // Add space button
+    const addSpaceBtn = document.getElementById('addSpaceBtn');
+    if (addSpaceBtn) {
+        addSpaceBtn.addEventListener('click', showModal);
+    }
+    
+    // Add first space button
+    const addFirstSpace = document.getElementById('addFirstSpace');
+    if (addFirstSpace) {
+        addFirstSpace.addEventListener('click', showModal);
+    }
+    
+    // Settings button
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', showSettings);
+    }
+    
+    // Modal controls
+    const closeModal = document.getElementById('closeModal');
+    if (closeModal) {
+        closeModal.addEventListener('click', hideModal);
+    }
+    
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', hideModal);
+    }
+    
+    // Settings controls
+    const closeSettings = document.getElementById('closeSettings');
+    if (closeSettings) {
+        closeSettings.addEventListener('click', hideSettings);
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.dataset.tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            const targetPanel = document.getElementById(`${tabName}Tab`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        });
+    });
+    
+    // Add space form submission
+    const addSpaceConfirm = document.getElementById('addSpaceConfirm');
+    if (addSpaceConfirm) {
+        addSpaceConfirm.addEventListener('click', async () => {
+            hideError();
+            
+            const urlInput = document.getElementById('configUrl');
+            const jsonInput = document.getElementById('rawJson');
+            
+            try {
+                if (urlInput && urlInput.value.trim()) {
+                    await addSpaceFromUrl(urlInput.value.trim());
+                } else if (jsonInput && jsonInput.value.trim()) {
+                    await addSpaceFromJson(jsonInput.value.trim());
+                } else {
+                    throw new Error('Please provide either a URL or JSON configuration');
+                }
+                
+                hideModal();
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+    }
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('addSpaceModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideModal();
+            }
+        });
+    }
+    
+    // Close settings when clicking outside
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        document.addEventListener('click', (e) => {
+            if (settingsPanel.classList.contains('active') && 
+                !settingsPanel.contains(e.target) && 
+                !document.getElementById('settingsBtn').contains(e.target)) {
+                hideSettings();
+            }
+        });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideModal();
+            hideSettings();
+        }
+    });
+    
+    // System theme change listener
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+        }
+    });
+}
+
+// Load theme on startup
+chrome.storage.local.get(['theme'], (result) => {
+    currentTheme = result.theme || 'auto';
+    applyTheme(currentTheme);
 });
+
+// Make functions globally available for onclick handlers
+window.deleteSpace = deleteSpace;

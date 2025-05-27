@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "Team New Tab - A customizable dashboard for Chrome's new tab page",
   "scripts": {
-    "generate-icons": "node generate_icons.js"
+    "generate-icons": "node generate_icons.js",
+    "dev": "node dev-watcher.js",
+    "watch": "chokidar \"**/*.{js,html,css,json}\" --ignore \"node_modules/**\" --command \"echo 'Extension files changed - reload in Chrome!'\"",
+    "reload-extension": "node reload-extension.js"
   },
   "devDependencies": {
-    "canvas": "^2.11.2"
+    "chokidar-cli": "^3.0.0",
+    "nodemon": "^3.0.2"
   },
   "license": "MIT"
 } 

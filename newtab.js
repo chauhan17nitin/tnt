@@ -19,6 +19,9 @@ async function initializeApp() {
         // Load spaces from storage
         await loadSpaces();
         
+        // Ensure default space always exists
+        await ensureDefaultSpaceExists();
+        
         // Load current space
         await loadCurrentSpace();
         
@@ -54,14 +57,15 @@ async function saveSpaces() {
 }
 
 async function loadCurrentSpace() {
-    return new Promise((resolve) => {
-        chrome.storage.local.get(['currentSpace'], (result) => {
+    return new Promise(async (resolve) => {
+        chrome.storage.local.get(['currentSpace'], async (result) => {
             const spaceId = result.currentSpace;
             if (spaceId && allSpaces[spaceId]) {
                 currentSpace = allSpaces[spaceId];
                 currentSpace.id = spaceId;
             } else {
-                currentSpace = null;
+                // No space selected or space doesn't exist, create default space and set as current
+                await createDefaultSpace(true);
             }
             resolve();
         });
@@ -72,6 +76,138 @@ async function saveCurrentSpace(spaceId) {
     return new Promise((resolve) => {
         chrome.storage.local.set({ currentSpace: spaceId }, resolve);
     });
+}
+
+async function ensureDefaultSpaceExists() {
+    // Check if the default space "My Digital Hub" already exists
+    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === "My Digital Hub");
+    
+    if (!existingDefaultSpace) {
+        // Create the default space if it doesn't exist
+        console.log('Creating default space "My Digital Hub"...');
+        await createDefaultSpace(false);
+    } else {
+        console.log('Default space "My Digital Hub" already exists');
+    }
+}
+
+async function createDefaultSpace(setAsCurrent = true) {
+    // Check if a default space already exists
+    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === "My Digital Hub");
+    if (existingDefaultSpace && setAsCurrent) {
+        // Set the existing default space as current
+        const spaceId = Object.keys(allSpaces).find(id => allSpaces[id] === existingDefaultSpace);
+        currentSpace = existingDefaultSpace;
+        currentSpace.id = spaceId;
+        await saveCurrentSpace(spaceId);
+        activeFilters = [];
+        return;
+    }
+    
+    const defaultSpaceConfig = {
+        name: "My Digital Hub",
+        filters: ["Social Media", "Entertainment", "Music"],
+        links: [
+            // Social Media
+            {
+                label: "Facebook",
+                url: "https://facebook.com",
+                tag: "Social Media"
+            },
+            {
+                label: "Instagram",
+                url: "https://instagram.com",
+                tag: "Social Media"
+            },
+            {
+                label: "Twitter / X",
+                url: "https://x.com",
+                tag: "Social Media"
+            },
+            {
+                label: "LinkedIn",
+                url: "https://linkedin.com",
+                tag: "Social Media"
+            },
+            {
+                label: "Reddit",
+                url: "https://reddit.com",
+                tag: "Social Media"
+            },
+            {
+                label: "Discord",
+                url: "https://discord.com",
+                tag: "Social Media"
+            },
+            {
+                label: "WhatsApp Web",
+                url: "https://web.whatsapp.com",
+                tag: "Social Media"
+            },
+            
+            // Entertainment & OTT
+            {
+                label: "Netflix",
+                url: "https://netflix.com",
+                tag: "Entertainment"
+            },
+            {
+                label: "YouTube",
+                url: "https://youtube.com",
+                tag: "Entertainment"
+            },
+            {
+                label: "Prime Video",
+                url: "https://primevideo.com",
+                tag: "Entertainment"
+            },
+            {
+                label: "Disney+ Hotstar",
+                url: "https://hotstar.com",
+                tag: "Entertainment"
+            },
+            
+            // Music
+            {
+                label: "Spotify",
+                url: "https://open.spotify.com",
+                tag: "Music"
+            },
+            {
+                label: "Apple Music",
+                url: "https://music.apple.com",
+                tag: "Music"
+            },
+            {
+                label: "YouTube Music",
+                url: "https://music.youtube.com",
+                tag: "Music"
+            }
+        ]
+    };
+    
+    try {
+        if (setAsCurrent) {
+            // Use addSpace to create and set as current
+            const spaceId = await addSpace(defaultSpaceConfig);
+            console.log('Default space created and set as current:', spaceId);
+            
+            // Clear any active filters for the new space
+            activeFilters = [];
+        } else {
+            // Just create the space without setting as current
+            const spaceId = generateSpaceId(defaultSpaceConfig.name);
+            allSpaces[spaceId] = defaultSpaceConfig;
+            await saveSpaces();
+            console.log('Default space created successfully:', spaceId);
+        }
+        
+    } catch (error) {
+        console.error('Failed to create default space:', error);
+        if (setAsCurrent) {
+            currentSpace = null;
+        }
+    }
 }
 
 // Time and greeting functions
@@ -116,9 +252,22 @@ function updateSpaceSelector() {
     const selector = document.getElementById('spaceSelector');
     if (!selector) return;
     
-    selector.innerHTML = '<option value="">Select a space</option>';
+    selector.innerHTML = '';
     
-    Object.entries(allSpaces).forEach(([id, space]) => {
+    // If no spaces exist, show placeholder
+    if (Object.keys(allSpaces).length === 0) {
+        selector.innerHTML = '<option value="">No spaces available</option>';
+        return;
+    }
+    
+    // Sort spaces to put "My Digital Hub" first
+    const sortedSpaces = Object.entries(allSpaces).sort(([idA, spaceA], [idB, spaceB]) => {
+        if (spaceA.name === "My Digital Hub") return -1;
+        if (spaceB.name === "My Digital Hub") return 1;
+        return spaceA.name.localeCompare(spaceB.name);
+    });
+    
+    sortedSpaces.forEach(([id, space]) => {
         const option = document.createElement('option');
         option.value = id;
         option.textContent = space.name;
@@ -228,7 +377,6 @@ function renderLinks() {
         const card = document.createElement('a');
         card.className = 'link-card';
         card.href = link.url;
-        card.target = '_blank';
         
         // Add gradient class based on tag
         const gradientClass = getGradientClass(link.tag);
@@ -267,7 +415,10 @@ function getGradientClass(tag) {
         'Design': 'gradient-design',
         'Monitoring': 'gradient-monitoring',
         'Communication': 'gradient-communication',
-        'Documentation': 'gradient-documentation'
+        'Documentation': 'gradient-documentation',
+        'Social Media': 'gradient-social-media',
+        'Entertainment': 'gradient-entertainment',
+        'Music': 'gradient-music'
     };
     return tagMap[tag] || 'gradient-default';
 }
@@ -281,7 +432,10 @@ function getIconClass(tag) {
         'Design': 'fas fa-palette',
         'Monitoring': 'fas fa-chart-line',
         'Communication': 'fas fa-comments',
-        'Documentation': 'fas fa-book'
+        'Documentation': 'fas fa-book',
+        'Social Media': 'fas fa-share-alt',
+        'Entertainment': 'fas fa-play-circle',
+        'Music': 'fas fa-music'
     };
     return iconMap[tag] || 'fas fa-link';
 }
@@ -289,9 +443,11 @@ function getIconClass(tag) {
 // Filter functions
 function toggleFilter(filter) {
     if (activeFilters.includes(filter)) {
-        activeFilters = activeFilters.filter(f => f !== filter);
+        // If the filter is already active, deselect it (clear all filters)
+        activeFilters = [];
     } else {
-        activeFilters.push(filter);
+        // Clear all filters and select only the clicked one (single select)
+        activeFilters = [filter];
     }
     
     renderFilterChips();
@@ -429,14 +585,30 @@ function generateSpaceId(name) {
 }
 
 async function deleteSpace(spaceId) {
+    // Prevent deletion of the default space
+    const spaceToDelete = allSpaces[spaceId];
+    if (spaceToDelete && spaceToDelete.name === "My Digital Hub") {
+        alert('The default space "My Digital Hub" cannot be deleted.');
+        return;
+    }
+    
     if (confirm('Are you sure you want to delete this space?')) {
         delete allSpaces[spaceId];
         await saveSpaces();
         
-        // If this was the current space, clear it
+        // If this was the current space, switch to the default space
         if (currentSpace && currentSpace.id === spaceId) {
-            currentSpace = null;
-            await saveCurrentSpace(null);
+            // Find the default space and set it as current
+            const defaultSpaceEntry = Object.entries(allSpaces).find(([id, space]) => space.name === "My Digital Hub");
+            if (defaultSpaceEntry) {
+                const [defaultSpaceId, defaultSpace] = defaultSpaceEntry;
+                currentSpace = defaultSpace;
+                currentSpace.id = defaultSpaceId;
+                await saveCurrentSpace(defaultSpaceId);
+            } else {
+                currentSpace = null;
+                await saveCurrentSpace(null);
+            }
         }
         
         updateSpaceSelector();
@@ -470,19 +642,37 @@ function updateSettingsSpacesList() {
     
     container.innerHTML = '';
     
-    Object.entries(allSpaces).forEach(([id, space]) => {
+    // Sort spaces to put "My Digital Hub" first
+    const sortedSpaces = Object.entries(allSpaces).sort(([idA, spaceA], [idB, spaceB]) => {
+        if (spaceA.name === "My Digital Hub") return -1;
+        if (spaceB.name === "My Digital Hub") return 1;
+        return spaceA.name.localeCompare(spaceB.name);
+    });
+    
+    sortedSpaces.forEach(([id, space]) => {
         const item = document.createElement('div');
         item.className = 'space-item';
+        
+        const isDefaultSpace = space.name === "My Digital Hub";
         
         item.innerHTML = `
             <div class="space-info">
                 <div class="space-name">${space.name}</div>
                 <div class="space-meta">${space.links ? space.links.length : 0} links</div>
             </div>
-            <button class="delete-btn" onclick="deleteSpace('${id}')">
-                <i class="fas fa-trash"></i>
-            </button>
+            ${isDefaultSpace 
+                ? '<span class="default-badge">Default</span>'
+                : '<button class="delete-btn"><i class="fas fa-trash"></i></button>'
+            }
         `;
+        
+        // Add event listener for delete button if it's not the default space
+        if (!isDefaultSpace) {
+            const deleteBtn = item.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => deleteSpace(id));
+            }
+        }
         
         container.appendChild(item);
     });
@@ -648,6 +838,3 @@ chrome.storage.local.get(['theme'], (result) => {
     currentTheme = result.theme || 'auto';
     applyTheme(currentTheme);
 });
-
-// Make functions globally available for onclick handlers
-window.deleteSpace = deleteSpace;

@@ -131,11 +131,13 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Facebook',
         url: 'https://facebook.com',
         tag: 'Social Media',
+        icon: 'facebook',
       },
       {
         label: 'Instagram',
         url: 'https://instagram.com',
         tag: 'Social Media',
+        icon: 'instagram',
       },
       {
         label: 'Twitter / X',
@@ -147,7 +149,7 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'LinkedIn',
         url: 'https://linkedin.com',
         tag: 'Social Media',
-        icon: 'linkedin',
+        icon: 'naukri',
       },
       {
         label: 'Reddit',
@@ -159,7 +161,7 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Discord',
         url: 'https://discord.com',
         tag: 'Social Media',
-        icon: 'netflix',
+        icon: 'discord',
       },
       {
         label: 'WhatsApp Web',
@@ -173,16 +175,19 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Netflix',
         url: 'https://netflix.com',
         tag: 'Entertainment',
+        icon: 'netflix',
       },
       {
         label: 'YouTube',
         url: 'https://youtube.com',
         tag: 'Entertainment',
+        icon: 'youtube',
       },
       {
         label: 'Prime Video',
         url: 'https://primevideo.com',
         tag: 'Entertainment',
+        icon: 'primevideo',
       },
       {
         label: 'Disney+ Hotstar',
@@ -196,16 +201,19 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Spotify',
         url: 'https://open.spotify.com',
         tag: 'Music',
+        icon: 'spotify',
       },
       {
         label: 'Apple Music',
         url: 'https://music.apple.com',
         tag: 'Music',
+        icon: 'applemusic',
       },
       {
         label: 'YouTube Music',
         url: 'https://music.youtube.com',
         tag: 'Music',
+        icon: 'youtube',
       },
     ],
   };

@@ -141,26 +141,31 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Twitter / X',
         url: 'https://x.com',
         tag: 'Social Media',
+        icon: 'x',
       },
       {
         label: 'LinkedIn',
         url: 'https://linkedin.com',
         tag: 'Social Media',
+        icon: 'linkedin',
       },
       {
         label: 'Reddit',
         url: 'https://reddit.com',
         tag: 'Social Media',
+        icon: 'reddit',
       },
       {
         label: 'Discord',
         url: 'https://discord.com',
         tag: 'Social Media',
+        icon: 'netflix',
       },
       {
         label: 'WhatsApp Web',
         url: 'https://web.whatsapp.com',
         tag: 'Social Media',
+        icon: 'whatsapp',
       },
 
       // Entertainment & OTT
@@ -183,6 +188,7 @@ async function createDefaultSpace(setAsCurrent = true) {
         label: 'Disney+ Hotstar',
         url: 'https://hotstar.com',
         tag: 'Entertainment',
+        icon: 'jio',
       },
 
       // Music
@@ -361,22 +367,6 @@ function renderFilterChips() {
   });
 }
 
-function getSimpleIconSlug(label) {
-  // Map label to Simple Icons slug (case-insensitive, remove special chars)
-  const customMap = {
-    'Prime Video': 'amazonprime',
-    'YouTube Music': 'youtubemusic',
-    'Disney+ Hotstar': 'hotstar',
-    'WhatsApp Web': 'whatsapp',
-    'Twitter / X': 'x',
-  };
-  if (customMap[label]) return customMap[label];
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric
-    .replace(/music$/, 'music'); // For Apple Music, YouTube Music, etc.
-}
-
 async function fetchSimpleIconSVG(slug) {
   const url = `https://cdn.simpleicons.org/${slug}`;
   try {
@@ -422,11 +412,19 @@ async function renderLinks() {
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
     card.title = link.label;
-    const gradientClass = getGradientClass(link.tag);
 
-    // Prepare icon
-    const slug = getSimpleIconSlug(link.label);
-    let svg = await fetchSimpleIconSVG(slug);
+    // Use icon key directly if present, fallback to label-based slug if not
+    let svg = '';
+    console.log(link);
+    if (link.icon) {
+      console.log(`Fetching icon for: ${link.icon}`);
+      svg = await fetchSimpleIconSVG(link.icon.toLowerCase());
+    }
+    // if (!svg && link.label) {
+    //   // fallback: try label as slug
+    //   const fallbackSlug = link.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+    //   svg = await fetchSimpleIconSVG(fallbackSlug);
+    // }
     if (!svg) {
       // fallback to default icon (FontAwesome)
       svg = '<i class="fas fa-link"></i>';
@@ -434,7 +432,9 @@ async function renderLinks() {
 
     card.innerHTML = `
       <div class="link-content">
-        <div class="link-icon ${gradientClass}">${svg}</div>
+        <div class="link-icon" style="display:flex;align-items:center;justify-content:center;width:3rem;height:3rem;">
+          ${svg}
+        </div>
         <div class="link-info">
           <div class="link-title">${link.label}</div>
           <div class="link-url">${link.url}</div>
@@ -471,23 +471,6 @@ function getGradientClass(tag) {
   return tagMap[tag] || 'gradient-default';
 }
 
-function getIconClass(tag) {
-  const iconMap = {
-    Backend: 'fas fa-server',
-    Frontend: 'fas fa-code',
-    DevOps: 'fas fa-cogs',
-    Tools: 'fas fa-tools',
-    Design: 'fas fa-palette',
-    Monitoring: 'fas fa-chart-line',
-    Communication: 'fas fa-comments',
-    Documentation: 'fas fa-book',
-    'Social Media': 'fas fa-share-alt',
-    Entertainment: 'fas fa-play-circle',
-    Music: 'fas fa-music',
-  };
-  return iconMap[tag] || 'fas fa-link';
-}
-
 // Filter functions
 function toggleFilter(filter) {
   if (activeFilters.includes(filter)) {
@@ -498,12 +481,6 @@ function toggleFilter(filter) {
     activeFilters = [filter];
   }
 
-  renderFilterChips();
-  renderLinks();
-}
-
-function clearAllFilters() {
-  activeFilters = [];
   renderFilterChips();
   renderLinks();
 }

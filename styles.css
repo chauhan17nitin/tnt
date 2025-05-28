@@ -363,13 +363,16 @@ body {
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius);
-  background: var(--gradient, var(--primary));
+  /* Remove background and gradient */
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: inherit;
   font-size: 1.25rem;
   flex-shrink: 0;
+  /* Center SVGs visually */
+  overflow: hidden;
 }
 
 .link-info {

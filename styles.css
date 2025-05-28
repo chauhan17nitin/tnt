@@ -78,7 +78,8 @@ body {
 .logo-icon {
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(135deg, var(--primary), #8b5cf6);
+  /* Remove background and gradient */
+  background: none;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;

@@ -11,5 +11,8 @@
     "16": "tnt_logo.jpg",
     "48": "tnt_logo.jpg",
     "128": "tnt_logo.jpg"
+  },
+  "sandbox": {
+    "pages": ["sandbox.html"]
   }
 }

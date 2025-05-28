@@ -878,6 +878,12 @@ textarea {
     width: 95%;
     margin: 1rem;
   }
+
+  /* TradingView Widget */
+  .tradingview-widget-container {
+    max-width: 100vw;
+    padding: 0 0.5rem;
+  }
 }
 
 /* Animations */
@@ -894,4 +900,21 @@ textarea {
 
 .fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Remove all previous index/NIFTY/BANKNIFTY styles, as we're embedding TradingView widget now */
+.tradingview-widget-container {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 600px;
+}
+.tradingview-widget-container__widget {
+  min-height: 48px;
+}
+.tradingview-widget-copyright {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
 }

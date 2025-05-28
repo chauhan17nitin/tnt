@@ -1,5 +1,18 @@
 // TNT - Team New Tab Extension JavaScript
 
+// Set TNT logo as favicon
+function setFavicon() {
+    const logoUrl = chrome.runtime.getURL("tnt_logo.jpg"); // Update path if you change logo file
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = logoUrl;
+  }
+  setFavicon();
+
 // Global state
 let currentSpace = null;
 let allSpaces = {};

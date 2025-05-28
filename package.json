@@ -9,13 +9,16 @@
     "watch": "chokidar \"**/*.{js,html,css,json}\" --ignore \"node_modules/**\" --command \"echo 'Extension files changed - reload in Chrome!'\"",
     "reload-extension": "node reload-extension.js",
     "lint": "eslint . --ext .js",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "chokidar-cli": "^3.0.0",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
     "nodemon": "^3.0.2",
     "prettier": "^3.5.3"
   },

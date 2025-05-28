@@ -1,5 +1,7 @@
 // TNT - Team New Tab Extension JavaScript
 
+const DEFAULT_SPACE_NAME = "My Digital Hub";
+
 // Set TNT logo as favicon
 function setFavicon() {
     const logoUrl = chrome.runtime.getURL("tnt_logo.jpg"); // Update path if you change logo file
@@ -92,8 +94,8 @@ async function saveCurrentSpace(spaceId) {
 }
 
 async function ensureDefaultSpaceExists() {
-    // Check if the default space "My Digital Hub" already exists
-    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === "My Digital Hub");
+    // Check if the default space DEFAULT_SPACE_NAME already exists
+    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === DEFAULT_SPACE_NAME);
     
     if (!existingDefaultSpace) {
         // Create the default space if it doesn't exist
@@ -106,7 +108,7 @@ async function ensureDefaultSpaceExists() {
 
 async function createDefaultSpace(setAsCurrent = true) {
     // Check if a default space already exists
-    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === "My Digital Hub");
+    const existingDefaultSpace = Object.values(allSpaces).find(space => space.name === DEFAULT_SPACE_NAME);
     if (existingDefaultSpace && setAsCurrent) {
         // Set the existing default space as current
         const spaceId = Object.keys(allSpaces).find(id => allSpaces[id] === existingDefaultSpace);
@@ -118,7 +120,7 @@ async function createDefaultSpace(setAsCurrent = true) {
     }
     
     const defaultSpaceConfig = {
-        name: "My Digital Hub",
+        name: DEFAULT_SPACE_NAME,
         filters: ["Social Media", "Entertainment", "Music"],
         links: [
             // Social Media
@@ -275,8 +277,8 @@ function updateSpaceSelector() {
     
     // Sort spaces to put "My Digital Hub" first
     const sortedSpaces = Object.entries(allSpaces).sort(([idA, spaceA], [idB, spaceB]) => {
-        if (spaceA.name === "My Digital Hub") return -1;
-        if (spaceB.name === "My Digital Hub") return 1;
+        if (spaceA.name === DEFAULT_SPACE_NAME) return -1;
+        if (spaceB.name === DEFAULT_SPACE_NAME) return 1;
         return spaceA.name.localeCompare(spaceB.name);
     });
     
@@ -605,8 +607,8 @@ function generateSpaceId(name) {
 async function deleteSpace(spaceId) {
     // Prevent deletion of the default space
     const spaceToDelete = allSpaces[spaceId];
-    if (spaceToDelete && spaceToDelete.name === "My Digital Hub") {
-        alert('The default space "My Digital Hub" cannot be deleted.');
+    if (spaceToDelete && spaceToDelete.name === DEFAULT_SPACE_NAME) {
+        alert(`The default space "${DEFAULT_SPACE_NAME}" cannot be deleted.`);
         return;
     }
     
@@ -617,7 +619,7 @@ async function deleteSpace(spaceId) {
         // If this was the current space, switch to the default space
         if (currentSpace && currentSpace.id === spaceId) {
             // Find the default space and set it as current
-            const defaultSpaceEntry = Object.entries(allSpaces).find(([id, space]) => space.name === "My Digital Hub");
+            const defaultSpaceEntry = Object.entries(allSpaces).find(([id, space]) => space.name === DEFAULT_SPACE_NAME);
             if (defaultSpaceEntry) {
                 const [defaultSpaceId, defaultSpace] = defaultSpaceEntry;
                 currentSpace = defaultSpace;
@@ -662,8 +664,8 @@ function updateSettingsSpacesList() {
     
     // Sort spaces to put "My Digital Hub" first
     const sortedSpaces = Object.entries(allSpaces).sort(([idA, spaceA], [idB, spaceB]) => {
-        if (spaceA.name === "My Digital Hub") return -1;
-        if (spaceB.name === "My Digital Hub") return 1;
+        if (spaceA.name === DEFAULT_SPACE_NAME) return -1;
+        if (spaceB.name === DEFAULT_SPACE_NAME) return 1;
         return spaceA.name.localeCompare(spaceB.name);
     });
     
@@ -671,7 +673,7 @@ function updateSettingsSpacesList() {
         const item = document.createElement('div');
         item.className = 'space-item';
         
-        const isDefaultSpace = space.name === "My Digital Hub";
+        const isDefaultSpace = space.name === DEFAULT_SPACE_NAME;
         
         item.innerHTML = `
             <div class="space-info">

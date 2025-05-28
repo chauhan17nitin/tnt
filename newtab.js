@@ -361,7 +361,34 @@ function renderFilterChips() {
   });
 }
 
-function renderLinks() {
+function getSimpleIconSlug(label) {
+  // Map label to Simple Icons slug (case-insensitive, remove special chars)
+  const customMap = {
+    'Prime Video': 'amazonprime',
+    'YouTube Music': 'youtubemusic',
+    'Disney+ Hotstar': 'hotstar',
+    'WhatsApp Web': 'whatsapp',
+    'Twitter / X': 'x',
+  };
+  if (customMap[label]) return customMap[label];
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric
+    .replace(/music$/, 'music'); // For Apple Music, YouTube Music, etc.
+}
+
+async function fetchSimpleIconSVG(slug) {
+  const url = `https://cdn.simpleicons.org/${slug}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Icon not found');
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+async function renderLinks() {
   const container = document.getElementById('linksGrid');
   const emptyState = document.getElementById('emptyState');
 
@@ -388,32 +415,33 @@ function renderLinks() {
   container.style.display = 'grid';
   container.innerHTML = '';
 
-  filteredLinks.forEach((link) => {
+  filteredLinks.forEach(async (link) => {
     const card = document.createElement('a');
     card.className = 'link-card';
     card.href = link.url;
-
-    // open links in a new tab
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
     card.title = link.label;
-
-    // Add gradient class based on tag
     const gradientClass = getGradientClass(link.tag);
 
-    card.innerHTML = `
-            <div class="link-content">
-                <div class="link-icon ${gradientClass}">
-                    <i class="${getIconClass(link.tag)}"></i>
-                </div>
-                <div class="link-info">
-                    <div class="link-title">${link.label}</div>
-                    <div class="link-url">${link.url}</div>
-                    <div class="link-tag">${link.tag}</div>
-                </div>
-            </div>
-        `;
+    // Prepare icon
+    const slug = getSimpleIconSlug(link.label);
+    let svg = await fetchSimpleIconSVG(slug);
+    if (!svg) {
+      // fallback to default icon (FontAwesome)
+      svg = '<i class="fas fa-link"></i>';
+    }
 
+    card.innerHTML = `
+      <div class="link-content">
+        <div class="link-icon ${gradientClass}">${svg}</div>
+        <div class="link-info">
+          <div class="link-title">${link.label}</div>
+          <div class="link-url">${link.url}</div>
+          <div class="link-tag">${link.tag}</div>
+        </div>
+      </div>
+    `;
     container.appendChild(card);
   });
 }

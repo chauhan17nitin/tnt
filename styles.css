@@ -879,11 +879,6 @@ textarea {
     margin: 1rem;
   }
 
-  /* TradingView Widget */
-  .tradingview-widget-container {
-    max-width: 100vw;
-    padding: 0 0.5rem;
-  }
 }
 
 /* Animations */

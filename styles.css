@@ -137,7 +137,7 @@ body {
 }
 
 .control-btn {
-  width: 2.5rem;
+  width: 4rem;
   height: 2.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -158,6 +158,12 @@ body {
   border-color: var(--primary);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .control-btn {
+    width: 2.5rem;
+  }
 }
 
 /* Main Content */

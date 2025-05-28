@@ -2,7 +2,7 @@
 
 // Initialize extension on install
 chrome.runtime.onInstalled.addListener(async () => {
-  console.log('TNT Extension installed');
+  console.log('TNT Extension.. installed');
 
   // Initialize basic settings
   try {

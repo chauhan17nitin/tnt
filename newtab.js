@@ -24,6 +24,7 @@ let currentTheme = 'auto';
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
   await initializeApp();
+  await renderAdviceCard();
   setupEventListeners();
   updateTime();
   setInterval(updateTime, 1000);
@@ -724,6 +725,44 @@ function updateThemeSettings() {
       }
     });
   });
+}
+
+// Advice quote functions
+async function getCachedAdvice() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['adviceQuote', 'adviceQuoteTimestamp'], async (result) => {
+      const now = Date.now();
+      const cachedQuote = result.adviceQuote;
+      const cachedTimestamp = result.adviceQuoteTimestamp;
+      if (cachedQuote && cachedTimestamp && now - cachedTimestamp < 3600 * 1000) {
+        resolve(cachedQuote);
+      } else {
+        try {
+          const res = await fetch('https://api.adviceslip.com/advice');
+          const data = await res.json();
+          const advice = data.slip.advice;
+          chrome.storage.local.set({ adviceQuote: advice, adviceQuoteTimestamp: now });
+          resolve(advice);
+        } catch {
+          resolve('Could not load advice.');
+        }
+      }
+    });
+  });
+}
+
+async function renderAdviceCard() {
+  const container = document.getElementById('adviceCard');
+  if (!container) return;
+  container.innerHTML = '<div class="advice-loading">Loading advice...</div>';
+  const advice = await getCachedAdvice();
+  container.innerHTML = `
+    <div class="advice-quote-card">
+      <i class="fas fa-quote-left"></i>
+      <span class="advice-text">${advice}</span>
+      <i class="fas fa-quote-right"></i>
+    </div>
+  `;
 }
 
 // Event listeners

@@ -9,8 +9,8 @@ console.log('=====================================');
 // Check if manifest.json exists
 const manifestPath = path.join(__dirname, 'manifest.json');
 if (!fs.existsSync(manifestPath)) {
-    console.error('❌ manifest.json not found!');
-    process.exit(1);
+  console.error('❌ manifest.json not found!');
+  process.exit(1);
 }
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -27,4 +27,4 @@ const timestampFile = path.join(__dirname, '.last-reload');
 fs.writeFileSync(timestampFile, new Date().toISOString());
 
 console.log(`\n⏰ Last reload: ${new Date().toLocaleTimeString()}`);
-console.log('👀 Watching for file changes...\n'); 
+console.log('👀 Watching for file changes...\n');

@@ -17,30 +17,36 @@ A Chrome extension that replaces your new tab page with a customizable dashboard
 ## Features
 
 ### 🏠 **New Tab Override**
+
 - Automatically loads your custom dashboard when opening a new tab
 - Clean, modern interface with dark/light/auto themes
 
 ### 🎯 **Spaces**
+
 - Create multiple spaces for different contexts (work, personal, etc.)
 - Each space has its own set of links and configuration
 - Add spaces via JSON URL or raw JSON input
 
 ### ⏰ **Time-Based Activation**
+
 - Spaces can automatically activate based on time ranges
 - Perfect for work hours vs. personal time
 - Manual override always available
 
 ### 🏷️ **Filter Chips**
+
 - Organize links by tags/categories
 - Quick filtering to find what you need
 - Visual count indicators
 
 ### 🎨 **Themes**
+
 - Light mode
-- Dark mode  
+- Dark mode
 - Auto (follows system preference)
 
 ### ⚙️ **Easy Configuration**
+
 All configuration is stored locally using Chrome's storage API.
 
 ## JSON Configuration Format

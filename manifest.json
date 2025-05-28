@@ -1,17 +1,15 @@
 {
-    "manifest_version": 3,
-    "name": "TNT - Team New Tab",
-    "version": "1.0.0",
-    "description": "Replace your new tab with a customizable dashboard of internal links",
-    "chrome_url_overrides": {
-      "newtab": "newtab.html"
-    },
-    "permissions": [
-      "storage"
-    ],
-    "icons": {
-      "16": "tnt_logo.jpg",
-      "48": "tnt_logo.jpg",
-      "128": "tnt_logo.jpg"
-    }
+  "manifest_version": 3,
+  "name": "TNT - Team New Tab",
+  "version": "1.0.0",
+  "description": "Replace your new tab with a customizable dashboard of internal links",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": ["storage"],
+  "icons": {
+    "16": "tnt_logo.jpg",
+    "48": "tnt_logo.jpg",
+    "128": "tnt_logo.jpg"
   }
+}

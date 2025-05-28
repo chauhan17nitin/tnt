@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 console.log('\n🔄 Chrome Extension Auto-Reload Helper');
 console.log('=====================================');
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Check if manifest.json exists
 const manifestPath = path.join(__dirname, 'manifest.json');

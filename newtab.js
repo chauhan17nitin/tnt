@@ -377,6 +377,11 @@ function renderLinks() {
         const card = document.createElement('a');
         card.className = 'link-card';
         card.href = link.url;
+
+        // open links in a new tab
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+        card.title = link.label;
         
         // Add gradient class based on tag
         const gradientClass = getGradientClass(link.tag);

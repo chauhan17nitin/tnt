@@ -568,6 +568,14 @@ function hideError() {
 // Space management functions
 async function addSpaceFromUrl(url) {
   try {
+    // Check if it's a GitHub URL and convert to raw URL if needed
+    if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
+      // Convert GitHub URL to raw URL
+      url = url.replace('github.com', 'raw.githubusercontent.com')
+               .replace('/blob/', '/')
+               .replace('/tree/', '/');
+    }
+
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

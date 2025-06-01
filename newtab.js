@@ -510,8 +510,12 @@ function applyTheme(theme) {
   if (themeToggle) {
     const icon = themeToggle.querySelector('i');
     if (icon) {
-      const isDark = document.body.dataset.theme === 'dark';
-      icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+      if (theme === 'auto') {
+        icon.className = 'fas fa-circle-half-stroke';
+      } else {
+        const isDark = document.body.dataset.theme === 'dark';
+        icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+      }
     }
   }
 

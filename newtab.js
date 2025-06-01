@@ -418,7 +418,6 @@ async function renderLinks() {
     const card = document.createElement('a');
     card.className = 'link-card';
     card.href = link.url;
-    card.target = '_blank';
     card.rel = 'noopener noreferrer';
     card.title = link.label;
 

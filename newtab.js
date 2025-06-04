@@ -542,34 +542,21 @@ async function renderLinks() {
   container.style.display = 'grid';
   container.innerHTML = '';
 
-  filteredLinks.forEach(async (link) => {
+  // Create all cards first with placeholder icons to maintain order
+  const cards = filteredLinks.map((link, index) => {
+    console.log(`Creating card ${index + 1}/${filteredLinks.length}: ${link.label}`);
+    
     const card = document.createElement('a');
     card.className = 'link-card';
     card.href = link.url;
     card.rel = 'noopener noreferrer';
     card.title = link.label;
 
-    // Use icon key directly if present, fallback to label-based slug if not
-    let svg = '';
-    console.log(link);
-    if (link.icon) {
-      console.log(`Fetching icon for: ${link.icon}`);
-      svg = await fetchSimpleIconSVG(link.icon.toLowerCase());
-    }
-    // if (!svg && link.label) {
-    //   // fallback: try label as slug
-    //   const fallbackSlug = link.label.toLowerCase().replace(/[^a-z0-9]/g, '');
-    //   svg = await fetchSimpleIconSVG(fallbackSlug);
-    // }
-    if (!svg) {
-      // fallback to default icon (FontAwesome)
-      svg = '<i class="fas fa-link"></i>';
-    }
-
+    // Start with a loading placeholder icon
     card.innerHTML = `
       <div class="link-content">
         <div class="link-icon" style="display:flex;align-items:center;justify-content:center;width:3rem;height:3rem;">
-          ${svg}
+          <i class="fas fa-spinner fa-spin" style="color: var(--text-muted);"></i>
         </div>
         <div class="link-info">
           <div class="link-title">${link.label}</div>
@@ -578,8 +565,46 @@ async function renderLinks() {
         </div>
       </div>
     `;
+    
     container.appendChild(card);
+    return { card, link, index };
   });
+
+  console.log(`✅ All ${cards.length} cards created in order, now loading icons...`);
+
+  // Now load icons in parallel and update the cards
+  const iconPromises = cards.map(async ({ card, link, index }) => {
+    let svg = '';
+    
+    try {
+      console.log(link);
+      if (link.icon) {
+        console.log(`Fetching icon for: ${link.icon}`);
+        svg = await fetchSimpleIconSVG(link.icon.toLowerCase());
+      }
+      
+      if (!svg) {
+        // fallback to default icon (FontAwesome)
+        svg = '<i class="fas fa-link"></i>';
+      }
+    } catch (error) {
+      console.warn(`Failed to load icon for ${link.label}:`, error);
+      svg = '<i class="fas fa-link"></i>';
+    }
+
+    // Update the icon in the already-positioned card
+    const iconContainer = card.querySelector('.link-icon');
+    if (iconContainer) {
+      iconContainer.innerHTML = svg;
+    }
+  });
+
+  // Wait for all icons to load (with timeout to prevent hanging)
+  try {
+    await Promise.allSettled(iconPromises);
+  } catch (error) {
+    console.warn('Some icons failed to load:', error);
+  }
 }
 
 function showEmptyState() {

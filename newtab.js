@@ -21,6 +21,11 @@ let allSpaces = {};
 let activeFilters = [];
 let currentTheme = 'auto';
 let wasAutoSelected = false; // Track if current space was auto-selected
+let lastAutoSwitchTime = null; // Track when last auto-switch happened
+let lastAutoSelectedSpaceId = null; // Track which space was last auto-selected
+let lastNotificationSpaceId = null; // Track which space we last showed notification for
+
+const AUTO_SWITCH_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,8 +35,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateTime();
   setInterval(updateTime, 1000);
   
-  // Check for space changes every minute
+  // Check for space changes every minute (but respect cooldown)
   setInterval(checkAndSwitchSpaceByTime, 60000);
+  
+  // Log cooldown status for debugging
+  if (lastAutoSwitchTime) {
+    const now = Date.now();
+    const isInCooldown = (now - lastAutoSwitchTime) < AUTO_SWITCH_COOLDOWN;
+    if (isInCooldown) {
+      const remainingMinutes = Math.round((AUTO_SWITCH_COOLDOWN - (now - lastAutoSwitchTime)) / 1000 / 60);
+      console.log(`🕒 Auto-switch cooldown active: ${remainingMinutes} minutes remaining`);
+    } else {
+      console.log('✅ Auto-switch cooldown expired, ready for new auto-switches');
+    }
+  }
 });
 
 async function initializeApp() {
@@ -62,8 +79,14 @@ async function initializeApp() {
 // Storage functions
 async function loadSpaces() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(['spaces'], (result) => {
+    chrome.storage.local.get(['spaces', 'lastAutoSwitchTime', 'lastAutoSelectedSpaceId', 'lastNotificationSpaceId'], (result) => {
       allSpaces = result.spaces || {};
+      
+      // Load cooldown state
+      lastAutoSwitchTime = result.lastAutoSwitchTime || null;
+      lastAutoSelectedSpaceId = result.lastAutoSelectedSpaceId || null;
+      lastNotificationSpaceId = result.lastNotificationSpaceId || null;
+      
       resolve();
     });
   });
@@ -77,6 +100,20 @@ async function saveSpaces() {
 
 async function loadCurrentSpace() {
   return new Promise(async (resolve) => {
+    // Check if we're still in cooldown period from last auto-switch
+    const now = Date.now();
+    const isInCooldown = lastAutoSwitchTime && (now - lastAutoSwitchTime) < AUTO_SWITCH_COOLDOWN;
+    
+    if (isInCooldown && lastAutoSelectedSpaceId && allSpaces[lastAutoSelectedSpaceId]) {
+      // We're in cooldown period, stick with the last auto-selected space
+      console.log(`In cooldown period (${Math.round((AUTO_SWITCH_COOLDOWN - (now - lastAutoSwitchTime)) / 1000 / 60)} minutes remaining), keeping space: "${allSpaces[lastAutoSelectedSpaceId].name}"`);
+      currentSpace = allSpaces[lastAutoSelectedSpaceId];
+      currentSpace.id = lastAutoSelectedSpaceId;
+      wasAutoSelected = true;
+      resolve();
+      return;
+    }
+
     // First, try to find a space that should be active based on current time
     const timeBasedSpace = findActiveSpaceByTime();
     
@@ -85,13 +122,16 @@ async function loadCurrentSpace() {
       currentSpace = timeBasedSpace.space;
       currentSpace.id = timeBasedSpace.id;
       wasAutoSelected = true; // Mark as auto-selected
+      lastAutoSwitchTime = now; // Record the auto-switch time
+      lastAutoSelectedSpaceId = timeBasedSpace.id; // Record which space was auto-selected
       await saveCurrentSpace(timeBasedSpace.id);
       console.log(`Auto-selected space "${currentSpace.name}" based on time`);
       
-      // Show notification for initial auto-selection (but only if it's not the default space)
-      if (timeBasedSpace.space.name !== DEFAULT_SPACE_NAME) {
+      // Show notification for initial auto-selection (but only if it's not the default space and we haven't shown it recently)
+      if (timeBasedSpace.space.name !== DEFAULT_SPACE_NAME && lastNotificationSpaceId !== timeBasedSpace.id) {
         setTimeout(() => {
           showAutoSwitchNotification(timeBasedSpace.space.name, true);
+          lastNotificationSpaceId = timeBasedSpace.id; // Remember we showed notification for this space
         }, 1000); // Delay to ensure UI is ready
       }
       
@@ -118,7 +158,12 @@ async function loadCurrentSpace() {
 
 async function saveCurrentSpace(spaceId) {
   return new Promise((resolve) => {
-    chrome.storage.local.set({ currentSpace: spaceId }, resolve);
+    chrome.storage.local.set({ 
+      currentSpace: spaceId,
+      lastAutoSwitchTime: lastAutoSwitchTime,
+      lastAutoSelectedSpaceId: lastAutoSelectedSpaceId,
+      lastNotificationSpaceId: lastNotificationSpaceId
+    }, resolve);
   });
 }
 
@@ -291,6 +336,9 @@ function updateTime() {
       day: 'numeric',
     });
   }
+  
+  // Update status badge to refresh cooldown timer
+  updateSpaceBanner();
 }
 
 function isSpaceActive(space) {
@@ -383,7 +431,16 @@ function updateSpaceBanner() {
         if (isActive) {
           console.log('Space is active, wasAutoSelected:', wasAutoSelected);
           if (wasAutoSelected) {
-            spaceStatus.textContent = 'Auto-Selected';
+            // Check if we're in cooldown period
+            const now = Date.now();
+            const isInCooldown = lastAutoSwitchTime && (now - lastAutoSwitchTime) < AUTO_SWITCH_COOLDOWN;
+            
+            if (isInCooldown) {
+              const remainingMinutes = Math.round((AUTO_SWITCH_COOLDOWN - (now - lastAutoSwitchTime)) / 1000 / 60);
+              spaceStatus.textContent = `Auto-Selected (${remainingMinutes}m)`;
+            } else {
+              spaceStatus.textContent = 'Auto-Selected';
+            }
             spaceStatus.className = 'status-badge auto-selected';
           } else {
             spaceStatus.textContent = 'Active';
@@ -858,6 +915,7 @@ function setupEventListeners() {
         currentSpace = allSpaces[spaceId];
         currentSpace.id = spaceId;
         wasAutoSelected = false; // Reset auto-selected flag for manual selection
+        resetAutoSwitchCooldown(); // Reset cooldown when user manually selects
         await saveCurrentSpace(spaceId);
 
         // Clear filters and update UI
@@ -1070,6 +1128,15 @@ function findActiveSpaceByTime() {
 
 // New function to check and switch space based on time
 async function checkAndSwitchSpaceByTime() {
+  // Check if we're still in cooldown period from last auto-switch
+  const now = Date.now();
+  const isInCooldown = lastAutoSwitchTime && (now - lastAutoSwitchTime) < AUTO_SWITCH_COOLDOWN;
+  
+  if (isInCooldown) {
+    console.log(`Skipping auto-switch check - in cooldown period (${Math.round((AUTO_SWITCH_COOLDOWN - (now - lastAutoSwitchTime)) / 1000 / 60)} minutes remaining)`);
+    return;
+  }
+
   const timeBasedSpace = findActiveSpaceByTime();
   
   // Only switch if we found a different space than the current one
@@ -1079,6 +1146,8 @@ async function checkAndSwitchSpaceByTime() {
     currentSpace = timeBasedSpace.space;
     currentSpace.id = timeBasedSpace.id;
     wasAutoSelected = true; // Mark as auto-selected
+    lastAutoSwitchTime = now; // Record the auto-switch time
+    lastAutoSelectedSpaceId = timeBasedSpace.id; // Record which space was auto-selected
     await saveCurrentSpace(timeBasedSpace.id);
     
     // Clear filters and update UI
@@ -1088,8 +1157,11 @@ async function checkAndSwitchSpaceByTime() {
     renderFilterChips();
     renderLinks();
     
-    // Show a brief notification about the auto-switch
-    showAutoSwitchNotification(timeBasedSpace.space.name);
+    // Show a brief notification about the auto-switch (only if we haven't shown it recently for this space)
+    if (lastNotificationSpaceId !== timeBasedSpace.id) {
+      showAutoSwitchNotification(timeBasedSpace.space.name);
+      lastNotificationSpaceId = timeBasedSpace.id; // Remember we showed notification for this space
+    }
   }
 }
 
@@ -1126,3 +1198,35 @@ function showAutoSwitchNotification(spaceName, isInitial = false) {
     }, 300);
   }, 3000);
 }
+
+// Function to reset cooldown (called when user manually selects a space)
+function resetAutoSwitchCooldown() {
+  lastAutoSwitchTime = null;
+  lastAutoSelectedSpaceId = null;
+  lastNotificationSpaceId = null;
+  console.log('Auto-switch cooldown reset due to manual space selection');
+}
+
+// Global function for testing - clear cooldown manually
+window.TNTDebug = {
+  clearCooldown: () => {
+    resetAutoSwitchCooldown();
+    console.log('🧪 Cooldown manually cleared for testing');
+    updateSpaceBanner(); // Refresh status badge
+  },
+  getCooldownStatus: () => {
+    if (!lastAutoSwitchTime) {
+      console.log('No cooldown active');
+      return null;
+    }
+    const now = Date.now();
+    const remainingMs = AUTO_SWITCH_COOLDOWN - (now - lastAutoSwitchTime);
+    const remainingMinutes = Math.round(remainingMs / 1000 / 60);
+    console.log(`Cooldown: ${remainingMinutes} minutes remaining`);
+    return { remainingMs, remainingMinutes };
+  },
+  forceAutoSwitch: () => {
+    console.log('🧪 Forcing auto-switch check...');
+    checkAndSwitchSpaceByTime();
+  }
+};

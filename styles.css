@@ -235,6 +235,18 @@ body {
   color: #166534;
 }
 
+.status-badge.auto-selected {
+  background: #dbeafe;
+  color: #1e40af;
+  position: relative;
+}
+
+.status-badge.auto-selected::before {
+  content: '🤖';
+  margin-right: 0.25rem;
+  font-size: 0.75rem;
+}
+
 .status-badge.inactive {
   background: var(--bg-tertiary);
   color: var(--text-muted);
@@ -243,6 +255,11 @@ body {
 [data-theme='dark'] .status-badge.active {
   background: #065f46;
   color: #34d399;
+}
+
+[data-theme='dark'] .status-badge.auto-selected {
+  background: #1e3a8a;
+  color: #60a5fa;
 }
 
 .current-time {
@@ -375,6 +392,17 @@ body {
   flex-shrink: 0;
   /* Center SVGs visually */
   overflow: hidden;
+}
+
+/* Loading spinner for icons */
+.link-icon .fa-spinner {
+  animation: spin 1s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .link-info {
@@ -880,6 +908,13 @@ textarea {
     margin: 1rem;
   }
 
+  .search-container {
+    display: none;
+  }
+
+  .header-content {
+    gap: 0.5rem;
+  }
 }
 
 /* Animations */
@@ -1041,5 +1076,55 @@ textarea {
   
   .header-content {
     flex-wrap: wrap;
+  }
+}
+
+/* Auto-switch notification */
+.auto-switch-notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1000;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 300px;
+}
+
+.auto-switch-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.auto-switch-notification i {
+  color: var(--primary);
+  font-size: 1.125rem;
+}
+
+.auto-switch-notification span {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .auto-switch-notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+    transform: translateY(-100%);
+  }
+  
+  .auto-switch-notification.show {
+    transform: translateY(0);
   }
 }

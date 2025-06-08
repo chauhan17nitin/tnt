@@ -883,6 +883,38 @@ textarea {
   font-size: 0.875rem;
 }
 
+.github-attribution {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  transition: all 0.2s ease;
+}
+
+.github-link:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+  transform: translateY(-1px);
+}
+
+.github-link i {
+  font-size: 1rem;
+}
+
 /* Gradients for link icons */
 .gradient-backend {
   --gradient: linear-gradient(135deg, #f59e0b, #ea580c);

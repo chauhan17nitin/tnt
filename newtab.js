@@ -66,6 +66,12 @@ async function initializeApp() {
     // Load current space
     await loadCurrentSpace();
 
+    // Auto-select favorites filter if there are any favorites
+    if (userFavorites.size > 0) {
+      activeFilters = ['Favorites'];
+      console.log(`🌟 Auto-selected Favorites filter (${userFavorites.size} favorites found)`);
+    }
+
     // Apply theme
     applyTheme(currentTheme);
 
@@ -714,10 +720,20 @@ function toggleFilter(filter) {
 
 // Favorites functions
 async function toggleFavorite(url) {
+  const wasEmpty = userFavorites.size === 0;
+  
   if (userFavorites.has(url)) {
     userFavorites.delete(url);
+    // If this was the last favorite and favorites filter was active, clear the filter
+    if (userFavorites.size === 0 && activeFilters.includes('Favorites')) {
+      activeFilters = [];
+    }
   } else {
     userFavorites.add(url);
+    // If this is the first favorite, auto-select favorites filter
+    if (wasEmpty) {
+      activeFilters = ['Favorites'];
+    }
   }
   
   await saveFavorites();
@@ -1024,8 +1040,13 @@ function setupEventListeners() {
         resetAutoSwitchCooldown(); // Reset cooldown when user manually selects
         await saveCurrentSpace(spaceId);
 
-        // Clear filters and update UI
-        activeFilters = [];
+        // Auto-select favorites filter if there are any favorites, otherwise clear filters
+        if (userFavorites.size > 0) {
+          activeFilters = ['Favorites'];
+        } else {
+          activeFilters = [];
+        }
+        
         updateSpaceBanner();
         renderFilterChips();
         renderLinks();
@@ -1256,8 +1277,13 @@ async function checkAndSwitchSpaceByTime() {
     lastAutoSelectedSpaceId = timeBasedSpace.id; // Record which space was auto-selected
     await saveCurrentSpace(timeBasedSpace.id);
     
-    // Clear filters and update UI
-    activeFilters = [];
+    // Auto-select favorites filter if there are any favorites, otherwise clear filters
+    if (userFavorites.size > 0) {
+      activeFilters = ['Favorites'];
+    } else {
+      activeFilters = [];
+    }
+    
     updateSpaceSelector();
     updateSpaceBanner();
     renderFilterChips();

@@ -1,6 +1,6 @@
 # 🚀 TNT - Team New Tab
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chrome.google.com/webstore)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/chauhan17nitin/tnt)
 
@@ -190,7 +190,18 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+The BSD 3-Clause License allows:
+- ✅ Free use for any purpose (including commercial)
+- ✅ Modification and distribution
+- ✅ Private use
+- ✅ Commercial use
+
+With the following conditions:
+- 📝 Include the original copyright notice
+- 📝 Include the license text
+- 📝 Include any attribution notices
 
 ## 🙏 Acknowledgments
 

@@ -24,6 +24,7 @@ let wasAutoSelected = false; // Track if current space was auto-selected
 let lastAutoSwitchTime = null; // Track when last auto-switch happened
 let lastAutoSelectedSpaceId = null; // Track which space was last auto-selected
 let lastNotificationSpaceId = null; // Track which space we last showed notification for
+let userFavorites = new Set(); // Store user's favorite links (by URL)
 
 const AUTO_SWITCH_COOLDOWN = 10 * 60 * 1000; // 10 minutes in milliseconds
 
@@ -55,6 +56,9 @@ async function initializeApp() {
   try {
     // Load spaces from storage
     await loadSpaces();
+
+    // Load user favorites
+    await loadFavorites();
 
     // Ensure default space always exists
     await ensureDefaultSpaceExists();
@@ -89,6 +93,21 @@ async function loadSpaces() {
       
       resolve();
     });
+  });
+}
+
+async function loadFavorites() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['userFavorites'], (result) => {
+      userFavorites = new Set(result.userFavorites || []);
+      resolve();
+    });
+  });
+}
+
+async function saveFavorites() {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ userFavorites: Array.from(userFavorites) }, resolve);
   });
 }
 
@@ -479,12 +498,38 @@ function renderFilterChips() {
 
   // Count links per filter
   const filterCounts = {};
+  let favoritesCount = 0;
+  
   if (currentSpace.links) {
     currentSpace.links.forEach((link) => {
       filterCounts[link.tag] = (filterCounts[link.tag] || 0) + 1;
+      if (userFavorites.has(link.url)) {
+        favoritesCount++;
+      }
     });
   }
 
+  // Add Favorites filter chip first (if there are any favorites)
+  if (favoritesCount > 0) {
+    const favChip = document.createElement('div');
+    favChip.className = 'filter-chip favorites-chip';
+    favChip.dataset.filter = 'Favorites';
+
+    if (activeFilters.includes('Favorites')) {
+      favChip.classList.add('active');
+    }
+
+    favChip.innerHTML = `
+      <i class="fas fa-star"></i>
+      Favorites
+      <span class="chip-count">${favoritesCount}</span>
+    `;
+
+    favChip.addEventListener('click', () => toggleFilter('Favorites'));
+    container.appendChild(favChip);
+  }
+
+  // Add regular filter chips
   currentSpace.filters.forEach((filter) => {
     const chip = document.createElement('div');
     chip.className = 'filter-chip';
@@ -529,7 +574,13 @@ async function renderLinks() {
   // Filter links
   let filteredLinks = currentSpace.links;
   if (activeFilters.length > 0) {
-    filteredLinks = currentSpace.links.filter((link) => activeFilters.includes(link.tag));
+    if (activeFilters.includes('Favorites')) {
+      // Show only favorite links
+      filteredLinks = currentSpace.links.filter((link) => userFavorites.has(link.url));
+    } else {
+      // Show links matching the selected tag filter
+      filteredLinks = currentSpace.links.filter((link) => activeFilters.includes(link.tag));
+    }
   }
 
   if (filteredLinks.length === 0) {
@@ -552,6 +603,8 @@ async function renderLinks() {
     card.rel = 'noopener noreferrer';
     card.title = link.label;
 
+    const isFavorite = userFavorites.has(link.url);
+    
     // Start with a loading placeholder icon
     card.innerHTML = `
       <div class="link-content">
@@ -563,8 +616,21 @@ async function renderLinks() {
           <div class="link-url">${link.url}</div>
           <div class="link-tag">${link.tag}</div>
         </div>
+        <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-url="${link.url}" title="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}">
+          <i class="fas fa-star"></i>
+        </button>
       </div>
     `;
+    
+    // Add event listener for favorite button
+    const favoriteBtn = card.querySelector('.favorite-btn');
+    if (favoriteBtn) {
+      favoriteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(link.url);
+      });
+    }
     
     container.appendChild(card);
     return { card, link, index };
@@ -642,6 +708,21 @@ function toggleFilter(filter) {
     activeFilters = [filter];
   }
 
+  renderFilterChips();
+  renderLinks();
+}
+
+// Favorites functions
+async function toggleFavorite(url) {
+  if (userFavorites.has(url)) {
+    userFavorites.delete(url);
+  } else {
+    userFavorites.add(url);
+  }
+  
+  await saveFavorites();
+  
+  // Update UI
   renderFilterChips();
   renderLinks();
 }

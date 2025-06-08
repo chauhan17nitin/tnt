@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chrome.google.com/webstore)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/your-username/tnt)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/chauhan17nitin/tnt)
 
 > Transform your Chrome new tab into a powerful, customizable dashboard for your team's internal tools and frequently used links.
 
@@ -200,9 +200,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/tnt/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/tnt/discussions)
-- **Documentation**: [Wiki](https://github.com/your-username/tnt/wiki)
+- **Issues**: [GitHub Issues](https://github.com/chauhan17nitin/tnt/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/chauhan17nitin/tnt/discussions)
+- **Documentation**: [Wiki](https://github.com/chauhan17nitin/tnt/wiki)
 
 ---
 

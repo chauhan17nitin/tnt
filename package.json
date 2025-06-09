@@ -1,6 +1,6 @@
 {
   "name": "tnt",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Team New Tab - A customizable dashboard for Chrome's new tab page",
   "type": "module",
   "scripts": {

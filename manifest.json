@@ -8,8 +8,8 @@
   },
   "permissions": ["storage"],
   "icons": {
-    "16": "tnt_logo.jpg",
-    "48": "tnt_logo.jpg",
-    "128": "tnt_logo.jpg"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }

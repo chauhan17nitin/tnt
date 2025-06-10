@@ -91,22 +91,26 @@ TNT uses a simple JSON format for space configuration:
     {
       "label": "GitHub Repository",
       "url": "https://github.com/myorg/project",
-      "tag": "Development"
+      "tag": "Development",
+      "icon": "github"
     },
     {
       "label": "Figma Design System",
       "url": "https://figma.com/design-system",
-      "tag": "Design"
+      "tag": "Design",
+      "icon": "figma"
     },
     {
       "label": "AWS Console",
       "url": "https://console.aws.amazon.com",
-      "tag": "DevOps"
+      "tag": "DevOps",
+      "icon": "amazonaws"
     },
     {
       "label": "Project Wiki",
       "url": "https://wiki.company.com/project",
-      "tag": "Documentation"
+      "tag": "Documentation",
+      "icon": "gitbook"
     }
   ]
 }
@@ -127,6 +131,41 @@ TNT uses a simple JSON format for space configuration:
 | `links[].label` | string | Display text for the link |
 | `links[].url` | string | Target URL |
 | `links[].tag` | string | Filter tag (must exist in `filters` array) |
+| `links[].icon` | string | (Optional) Icon slug from Simple Icons (e.g., "github", "figma") |
+
+### 🎨 Icons
+
+TNT supports beautiful icons for your links using [Simple Icons](https://simpleicons.org/):
+
+- **Icon Source**: Icons are loaded from Simple Icons CDN (`cdn.simpleicons.org`)
+- **Icon Format**: Use the icon slug (lowercase name) from Simple Icons
+- **Fallback**: If an icon is not found, a default link icon is displayed
+- **Optional**: The `icon` field is optional - links work perfectly without icons
+
+**Popular Icon Examples:**
+```json
+{
+  "label": "GitHub",
+  "url": "https://github.com",
+  "icon": "github"
+},
+{
+  "label": "Google Drive",
+  "url": "https://drive.google.com",
+  "icon": "googledrive"
+},
+{
+  "label": "Slack",
+  "url": "https://slack.com",
+  "icon": "slack"
+}
+```
+
+**Finding Icon Slugs:**
+1. Visit [simpleicons.org](https://simpleicons.org/)
+2. Search for your desired brand/service
+3. Use the slug shown (usually the lowercase brand name)
+4. Common examples: `github`, `google`, `microsoft`, `apple`, `netflix`, `spotify`, `discord`, `slack`
 
 ## 🛠️ Development
 

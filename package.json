@@ -7,7 +7,7 @@
     "lint": "eslint . --ext .js",
     "format": "prettier --write .",
     "prepare": "husky install",
-    "build": "rm -rf dist/ && mkdir -p dist && terser newtab.js --compress --mangle -o dist/newtab.js && terser background.js --compress --mangle -o dist/background.js && terser config.js --compress --mangle -o dist/config.js && cp styles.css newtab.html manifest.json tnt_logo.jpg dist/ && cp -r icons dist/",
+    "build": "rm -rf dist/ && mkdir -p dist && terser newtab.js --compress --mangle -o dist/newtab.js && terser background.js --compress --mangle -o dist/background.js && terser config.js --compress --mangle -o dist/config.js && cp styles.css newtab.html manifest.json tnt_logo.png dist/ && cp -r icons dist/",
     "package": "npm run build && cd dist && zip -r ../tnt-extension-v$(node -p \"require('../package.json').version\").zip .",
     "dev": "echo 'Development mode - use files directly for Chrome extension development'"
   },

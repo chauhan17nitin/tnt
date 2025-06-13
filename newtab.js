@@ -24,7 +24,7 @@ const DEFAULT_SPACE_NAME = 'My Digital Hub';
 
 // Set TNT logo as favicon
 function setFavicon() {
-  const logoUrl = chrome.runtime.getURL('tnt_logo.jpg'); // Update path if you change logo file
+  const logoUrl = chrome.runtime.getURL('tnt_logo.png'); // Update path if you change logo file
   let link = document.querySelector("link[rel~='icon']");
   if (!link) {
     link = document.createElement('link');

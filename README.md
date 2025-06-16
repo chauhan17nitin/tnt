@@ -1,12 +1,20 @@
-# 🚀 TNT - Team New Tab
+# ![TNT Logo](/icons/icon48.png) TNT - Team New Tab 
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chrome.google.com/webstore)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/chauhan17nitin/tnt)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
+[![Version](https://img.shields.io/badge/version-0.0.2-green.svg)](https://github.com/chauhan17nitin/tnt)
 
-> Transform your Chrome new tab into a powerful, customizable dashboard for your team's internal tools and frequently used links.
+[**➤ Install from Chrome Web Store**](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
 
-TNT (Team New Tab) is a Chrome extension that replaces the default new tab page with a beautiful, organized dashboard featuring spaces, time-based activation, filtering, and multiple themes.
+### 🚀 TNT is built for teams who refuse to settle for AVERAGE.
+
+**Imagine a world where your developers never waste another minute hunting for the right link, where every tool, doc, and dashboard is just one tab away.** TNT is the productivity multiplier for high-performing teams—engineered to eliminate friction, boost focus, and let your talent do what they do best: build, create, and deliver.
+
+*If you believe time is your most valuable asset, TNT is your secret weapon. Supercharge your workflow, empower your team, and make every new tab a launchpad for greatness.*
+
+
+
+TNT (Team New Tab) is a Chrome extension that replaces the default new tab page with a beautiful, organized dashboard featuring spaces, time-based activation and filterring.
 
 ## ✨ Features
 

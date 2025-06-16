@@ -1,26 +1,16 @@
-# 🚀 TNT - Team New Tab <img src="assets/icon48.png" alt="TNT Logo" width="32" height="32">
+# ![TNT Logo](/icons/icon48.png) TNT - Team New Tab 
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/chauhan17nitin/tnt)
+[![Version](https://img.shields.io/badge/version-0.0.2-green.svg)](https://github.com/chauhan17nitin/tnt)
 
 [**➤ Install from Chrome Web Store**](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
 
-<div align="center">
-  <img src="assets/icon48.png" alt="TNT Logo" width="128" height="128">
-  
-  <h2>🚀 TNT is built for teams who refuse to settle for average.</h2>
-</div>
+### 🚀 TNT is built for teams who refuse to settle for AVERAGE.
 
-<div align="center">
-  <p>
-    <strong>Imagine a world where your developers never waste another minute hunting for the right link, where every tool, doc, and dashboard is just one tab away.</strong> TNT is the productivity multiplier for high-performing teams—engineered to eliminate friction, boost focus, and let your talent do what they do best: build, create, and deliver.
-  </p>
+**Imagine a world where your developers never waste another minute hunting for the right link, where every tool, doc, and dashboard is just one tab away.** TNT is the productivity multiplier for high-performing teams—engineered to eliminate friction, boost focus, and let your talent do what they do best: build, create, and deliver.
 
-  <p>
-    <em>If you believe time is your most valuable asset, TNT is your secret weapon. Supercharge your workflow, empower your team, and make every new tab a launchpad for greatness.</em>
-  </p>
-</div>
+*If you believe time is your most valuable asset, TNT is your secret weapon. Supercharge your workflow, empower your team, and make every new tab a launchpad for greatness.*
 
 
 

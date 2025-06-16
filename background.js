@@ -2,13 +2,13 @@
  *  * TNT - Team New Tab
  * Copyright (c) 2025 Nitin Chauhan
  * All rights reserved.
- * 
+ *
  * This software is provided for internal use only and is not licensed
  * for commercial use, redistribution, or modification without explicit
  * written permission from the copyright holder.
- * 
+ *
  * For commercial licensing inquiries, please contact the author.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -59,6 +59,14 @@ setInterval(async () => {
 
     for (const [spaceId, space] of Object.entries(spaces)) {
       if (space.activeTime) {
+        // Check activeDays if present
+        if (space.activeTime.activeDays && Array.isArray(space.activeTime.activeDays)) {
+          const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const today = daysMap[now.getDay()];
+          if (!space.activeTime.activeDays.includes(today)) {
+            continue;
+          }
+        }
         const [startHour, startMinute] = space.activeTime.start.split(':').map(Number);
         const [endHour, endMinute] = space.activeTime.end.split(':').map(Number);
 

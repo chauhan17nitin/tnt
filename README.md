@@ -86,7 +86,6 @@ TNT uses a simple JSON format for space configuration:
     "start": "09:00",
     "end": "18:00"
   },
-  "filters": ["Development", "Design", "DevOps", "Documentation"],
   "links": [
     {
       "label": "GitHub Repository",
@@ -126,12 +125,13 @@ TNT uses a simple JSON format for space configuration:
 | `activeTime` | object | Time range when space is active (24-hour format) |
 | `activeTime.start` | string | Start time (e.g., "09:00") |
 | `activeTime.end` | string | End time (e.g., "18:00") |
-| `filters` | array | List of available filter tags |
 | `links` | array | Array of link objects |
 | `links[].label` | string | Display text for the link |
 | `links[].url` | string | Target URL |
-| `links[].tag` | string | Filter tag (must exist in `filters` array) |
+| `links[].tag` | string | Filter tag (unique tags are automatically used as filters) |
 | `links[].icon` | string | (Optional) Icon slug from Simple Icons (e.g., "github", "figma") |
+
+> **Note:** Filters are automatically derived from the unique tags in your links. You don't need to specify them manually.
 
 ### 🎨 Icons
 

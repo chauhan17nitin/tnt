@@ -1,4 +1,4 @@
-# 🚀 TNT - Team New Tab <img src="assets/icon-128.png" alt="TNT Logo" width="32" height="32">
+# 🚀 TNT - Team New Tab <img src="assets/icon48.png" alt="TNT Logo" width="32" height="32">
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
@@ -7,7 +7,7 @@
 [**➤ Install from Chrome Web Store**](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/chauhan17nitin/tnt/main/assets/icon-128.png" alt="TNT Logo" width="128" height="128">
+  <img src="assets/icon48.png" alt="TNT Logo" width="128" height="128">
   
   <h2>🚀 TNT is built for teams who refuse to settle for average.</h2>
 </div>

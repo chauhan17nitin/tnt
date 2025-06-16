@@ -405,6 +405,16 @@ function isSpaceActive(space) {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
 
+  // Handle activeDays (optional)
+  if (space.activeTime.activeDays && Array.isArray(space.activeTime.activeDays)) {
+    // Map JS day (0=Sun, 1=Mon, ...) to string
+    const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = daysMap[now.getDay()];
+    if (!space.activeTime.activeDays.includes(today)) {
+      return false;
+    }
+  }
+
   const [startHour, startMinute] = space.activeTime.start.split(':').map(Number);
   const [endHour, endMinute] = space.activeTime.end.split(':').map(Number);
 
@@ -1230,15 +1240,22 @@ chrome.storage.local.get(['theme'], (result) => {
 function findActiveSpaceByTime() {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  console.log(`Checking for active spaces at ${currentTimeStr} (${currentTime} minutes)`);
+  // Map JS day (0=Sun, 1=Mon, ...) to string
+  const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = daysMap[now.getDay()];
 
   // Find all spaces that have activeTime configured and are currently active
   const activeSpaces = [];
 
   Object.entries(allSpaces).forEach(([id, space]) => {
     if (space.activeTime) {
+      // Check activeDays if present
+      if (space.activeTime.activeDays && Array.isArray(space.activeTime.activeDays)) {
+        if (!space.activeTime.activeDays.includes(today)) {
+          return; // skip this space for today
+        }
+      }
       const [startHour, startMinute] = space.activeTime.start.split(':').map(Number);
       const [endHour, endMinute] = space.activeTime.end.split(':').map(Number);
 
@@ -1248,19 +1265,10 @@ function findActiveSpaceByTime() {
       // Handle cases where end time is before start time (crosses midnight)
       let isActive;
       if (endTime < startTime) {
-        // Time range crosses midnight (e.g., 22:00 - 06:00)
         isActive = currentTime >= startTime || currentTime <= endTime;
-        console.log(
-          `Space "${space.name}": ${space.activeTime.start}-${space.activeTime.end} (crosses midnight) - ${isActive ? 'ACTIVE' : 'inactive'}`
-        );
       } else {
-        // Normal time range within same day
         isActive = currentTime >= startTime && currentTime <= endTime;
-        console.log(
-          `Space "${space.name}": ${space.activeTime.start}-${space.activeTime.end} - ${isActive ? 'ACTIVE' : 'inactive'}`
-        );
       }
-
       if (isActive) {
         activeSpaces.push({ id, space });
       }

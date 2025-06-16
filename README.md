@@ -84,7 +84,8 @@ TNT uses a simple JSON format for space configuration:
   "mode": "auto",
   "activeTime": {
     "start": "09:00",
-    "end": "18:00"
+    "end": "18:00",
+    "activeDays": ["Mon", "Tue", "Wed", "Thu", "Fri"]
   },
   "filters": ["Development", "Design", "DevOps", "Documentation"],
   "links": [
@@ -126,6 +127,7 @@ TNT uses a simple JSON format for space configuration:
 | `activeTime` | object | Time range when space is active (24-hour format) |
 | `activeTime.start` | string | Start time (e.g., "09:00") |
 | `activeTime.end` | string | End time (e.g., "18:00") |
+| `activeTime.activeDays` | array | (Optional) Days of the week when the space is active (e.g., `["Mon", "Tue", "Wed", "Thu", "Fri"]`). If omitted, the space is active every day. |
 | `filters` | array | List of available filter tags |
 | `links` | array | Array of link objects |
 | `links[].label` | string | Display text for the link |

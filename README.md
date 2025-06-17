@@ -2,7 +2,7 @@
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
-[![Version](https://img.shields.io/badge/version-0.0.2-green.svg)](https://github.com/chauhan17nitin/tnt)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/chauhan17nitin/tnt)
 
 [**➤ Install from Chrome Web Store**](https://chromewebstore.google.com/detail/tnt-team-new-tab/bokmedhehkjeehoongpnecjmaaafjeao)
 

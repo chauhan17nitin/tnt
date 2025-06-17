@@ -257,7 +257,6 @@ async function createDefaultSpace(setAsCurrent = true) {
 
   const defaultSpaceConfig = {
     name: DEFAULT_SPACE_NAME,
-    filters: ['Social Media', 'Entertainment', 'Music'],
     links: [
       // Social Media
       {
@@ -543,10 +542,13 @@ function renderFilterChips() {
 
   container.innerHTML = '';
 
-  if (!currentSpace || !currentSpace.filters) {
+  if (!currentSpace || !currentSpace.links) {
     container.style.display = 'none';
     return;
   }
+
+  // Always derive filters from unique tags
+  currentSpace.filters = [...new Set(currentSpace.links.map(link => link.tag))];
 
   container.style.display = 'flex';
 

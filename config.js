@@ -30,10 +30,6 @@ function validateSpaceConfig(config) {
     throw new Error('Space must have a valid name');
   }
 
-  if (config.filters && !Array.isArray(config.filters)) {
-    throw new Error('Filters must be an array');
-  }
-
   if (config.links && !Array.isArray(config.links)) {
     throw new Error('Links must be an array');
   }
@@ -44,6 +40,9 @@ function validateSpaceConfig(config) {
         throw new Error(`Link at index ${index} must have label, url, and tag`);
       }
     });
+
+    // Always derive filters from unique tags
+    config.filters = [...new Set(config.links.map(link => link.tag))];
   }
 
   return true;

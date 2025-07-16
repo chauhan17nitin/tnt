@@ -548,7 +548,7 @@ function renderFilterChips() {
   }
 
   // Always derive filters from unique tags
-  currentSpace.filters = [...new Set(currentSpace.links.map(link => link.tag))];
+  currentSpace.filters = [...new Set(currentSpace.links.map((link) => link.tag))];
 
   container.style.display = 'flex';
 
@@ -842,6 +842,13 @@ function showModal() {
     const jsonInput = document.getElementById('rawJson');
     if (urlInput) urlInput.value = '';
     if (jsonInput) jsonInput.value = '';
+
+    // Clear file selection
+    const fileInfo = document.getElementById('fileInfo');
+    const jsonFileInput = document.getElementById('jsonFile');
+    if (fileInfo) fileInfo.style.display = 'none';
+    if (jsonFileInput) jsonFileInput.value = '';
+
     hideError();
   }
 }
@@ -898,6 +905,25 @@ async function addSpaceFromJson(jsonString) {
   } catch (error) {
     throw new Error(`Invalid JSON: ${error.message}`);
   }
+}
+
+async function addSpaceFromFile(file) {
+  try {
+    const jsonString = await readFileAsText(file);
+    const spaceConfig = JSON.parse(jsonString);
+    return addSpace(spaceConfig);
+  } catch (error) {
+    throw new Error(`Failed to read file: ${error.message}`);
+  }
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = (e) => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
 }
 
 async function addSpace(spaceConfig) {
@@ -1167,6 +1193,76 @@ function setupEventListeners() {
     });
   });
 
+  // File upload functionality
+  const jsonFileInput = document.getElementById('jsonFile');
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const removeFileBtn = document.getElementById('removeFile');
+  const fileUploadArea = document.querySelector('.file-upload-area');
+  let selectedFile = null;
+
+  if (jsonFileInput) {
+    jsonFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleFileSelection(file);
+      }
+    });
+  }
+
+  if (removeFileBtn) {
+    removeFileBtn.addEventListener('click', () => {
+      clearFileSelection();
+    });
+  }
+
+  // Drag and drop functionality
+  if (fileUploadArea) {
+    fileUploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileUploadArea.classList.add('dragover');
+    });
+
+    fileUploadArea.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      fileUploadArea.classList.remove('dragover');
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileUploadArea.classList.remove('dragover');
+      console.log('Dropped file:', e.dataTransfer.files);
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type === 'application/json' || file.name.endsWith('.json')) {
+          handleFileSelection(file);
+        } else {
+          showError('Please select a valid JSON file');
+        }
+      }
+    });
+  }
+
+  function handleFileSelection(file) {
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      showError('Please select a valid JSON file');
+      return;
+    }
+
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileInfo.style.display = 'block';
+    hideError();
+  }
+
+  function clearFileSelection() {
+    selectedFile = null;
+    if (jsonFileInput) jsonFileInput.value = '';
+    if (fileInfo) fileInfo.style.display = 'none';
+    hideError();
+  }
+
   // Add space form submission
   const addSpaceConfirm = document.getElementById('addSpaceConfirm');
   if (addSpaceConfirm) {
@@ -1181,11 +1277,14 @@ function setupEventListeners() {
           await addSpaceFromUrl(urlInput.value.trim());
         } else if (jsonInput && jsonInput.value.trim()) {
           await addSpaceFromJson(jsonInput.value.trim());
+        } else if (selectedFile) {
+          await addSpaceFromFile(selectedFile);
         } else {
-          throw new Error('Please provide either a URL or JSON configuration');
+          throw new Error('Please provide either a URL, JSON configuration, or upload a file');
         }
 
         hideModal();
+        clearFileSelection();
       } catch (error) {
         showError(error.message);
       }

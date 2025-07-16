@@ -719,6 +719,115 @@ textarea {
   margin-top: 0.5rem;
 }
 
+/* File Upload Styles */
+.file-upload-container {
+  margin-bottom: 1rem;
+}
+
+.file-upload-label {
+  display: block;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  background: var(--bg-tertiary);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.file-upload-area:hover {
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+}
+
+.file-upload-area.dragover {
+  border-color: var(--primary);
+  background: var(--bg-secondary);
+  transform: scale(1.02);
+}
+
+.file-upload-area i {
+  font-size: 2rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.upload-text {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.upload-hint {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.file-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.file-details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-details i {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.file-details span {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.remove-file-btn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.remove-file-btn:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+[data-theme='dark'] .file-upload-area {
+  background: var(--bg-tertiary);
+}
+
+[data-theme='dark'] .file-upload-area:hover {
+  background: var(--bg-secondary);
+}
+
 .error-message {
   background: #fef2f2;
   color: #dc2626;
